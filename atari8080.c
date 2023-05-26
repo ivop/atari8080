@@ -272,9 +272,7 @@ static void bios_entry(int function) {
 
     switch (function) {
 
-    case 0:
-        biosprintf("BIOS: BOOT\n");
-        
+    case 0:         // boot
         memcpy(&mem[3][CPMB & 0x3fff], ccp_sys, ccp_sys_len);
         memcpy(&mem[3][BDOS & 0x3fff], bdos_sys, bdos_sys_len);
 
@@ -290,7 +288,7 @@ static void bios_entry(int function) {
 
         [[fallthrough]];
 
-    case 1:
+    case 1:         // wboot
         biosprintf("BIOS: WBOOT\n");
 
 //        if (wbootcnt==1) cpudump++; else wbootcnt++;
@@ -317,81 +315,62 @@ static void bios_entry(int function) {
         // Implement proper terminal with termios later so we can send
         // ^C et cetera... This is good enough for now.
 
-    case 2:
-//        biosprintf("BIOS: CONST, return in A, 00=no pending, ff=pending\n");
-        A = 0;
+    case 2:         // const
+        A = 0;      // no pending key, 0xff = pending
         break;
 
-    case 3:
-//        biosprintf("BIOS: CONIN, return in A\n");
+    case 3:         // conin
         A = getchar();
         break;
 
-    case 4:
-//        biosprintf("BIOS: CONOUT, character in C = $%02X\n", C);
+    case 4:         // conout
         printf("[32m%c[0m", C);     // we want some colors.
         fflush(stdout);
-//        putchar(C);
         break;
 
-    case 5:
-        biosprintf("BIOS: LIST\n");
-        exit(1);
+    case 5:         // list
         break;
 
-    case 6:
-//        biosprintf("BIOS: PUNCH\n");
-        exit(1);
+    case 6:         // punch
         break;
 
-    case 7:
-//        biosprintf("BIOS: READER\n");
-        exit(1);
+    case 7:         // reader
+        A = 26;     // return ^Z EOF
         break;
 
-    case 8:
-//        biosprintf("BIOS: HOME, settrk 0\n");
+    case 8:         // settrk
         track_number = 0;
         C = 0;
         break;
 
-    case 9:
-//        biosprintf("BIOS: SELDSK C = drive = $%02X, ", C);
+    case 9:         // seldsk
         H = 0;
         L = 0;
         if (C == 0) {           // we have only one drive
             drive_number = C;
-            H = DPBASE >> 8;
+            H = DPBASE >> 8;    // return dpbase in HL
             L = DPBASE & 0xff;
-//            biosprintf("found, dpbase = $%04X\n", DPBASE);
-        } else {
-//            biosprintf("not found\n");
         }
         break;
 
-    case 10:
-//        biosprintf("BIOS: SETTRK C = track = $%02X\n", C);
+    case 10:        // settrk
         track_number = C;
         break;
 
-    case 11:
-//        biosprintf("BIOS: SETSEC C = sector number = $%02X\n", C);
+    case 11:        // setsec
         sector_number = C;
         break;
 
-    case 12:
+    case 12:        // setdma
         dma_address = (B<<8) | C;
-//        biosprintf("BIOS: SETDMA BC = address = $%04X\n", dma_address);
         L = C;
         H = B;
         break;
 
-    case 13: {
-//        biosprintf("BIOS: READ, read status: ");
+    case 13: {      // read
         int abssec = track_number * 26 + sector_number;
         int adr = dma_address;
         if (fseek(dsk0, abssec*128, SEEK_SET) == EINVAL) {
-//            biosprintf("FAILED\n");
             A = 1;
             break;
         }
@@ -404,12 +383,10 @@ static void bios_entry(int function) {
                 adr++;
             }
         }
-//        biosprintf("OK\n");
         A = 0;
         break; }
 
-    case 14: {
-//        biosprintf("\t\tBIOS: WRITE ");
+    case 14: {      // write
         int abssec = track_number * 26 + sector_number;
         int adr = dma_address;
         if (fseek(dsk0, abssec*128, SEEK_SET) == EINVAL) {
@@ -433,16 +410,13 @@ static void bios_entry(int function) {
         A = 0;
         break; }
 
-    case 15:
-        biosprintf("BIOS: LISTST\n");
-        exit(1);
+    case 15:        // listst
+        A = 0xff;   // always ready
         break;
 
-    case 16:
-//        biosprintf("BIOS: SECTRAN, BC = sector number = %04X\n", B<<8|C);
-//        biosprintf("BIOS: SECTRAN, DE = trans table = %04X\n", D<<8|E);
-        A = C;
-        H = B;
+    case 16:        // sectran
+        A = C;      // no translation
+        H = B;      // also return in HL
         L = C;
         break;
     default:
