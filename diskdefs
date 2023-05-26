@@ -1,0 +1,9 @@
+diskdef ibm-3740-noskew
+    seclen 128
+    tracks 77
+    sectrk 26
+    blocksize 1024
+    maxdir 64
+    boottrk 2
+    os 2.2
+end
