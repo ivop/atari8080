@@ -1,0 +1,7 @@
+*~
+atari8080
+bootdisk.img
+bootsectors.bin
+tables/tablegen
+tables/tables.h
+
