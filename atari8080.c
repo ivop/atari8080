@@ -1096,31 +1096,15 @@ RET:
 
         // ######################### JMP #########################
         //
-        case 0xc2: // JNZ adr ---- if NZ, PC <- adr
-            if (!ZF) goto JMP;
-            break;
-        case 0xca: // JZ adr ---- if Z, PC <- adr
-            if (ZF) goto JMP;
-            break;
-        case 0xd2: // JNC adr ---- if NCY, PC<-adr
-            if (!CF) goto JMP;
-            break;
-        case 0xda: // JC adr ---- if CY, PC <- adr
-            if (CF) goto JMP;
-            break;
-        case 0xe2: // JPO adr ---- if POdd, PC <- adr
-            if (!PF) goto JMP;
-            break;
-        case 0xea: // JPE adr ---- if PEven, PC <- adr
-            if (PF) goto JMP;
-            break;
-        case 0xf2: // JP adr ---- if Plus, PC <- adr
-            if (!SF) goto JMP;
-            break;
-        case 0xfa: // JM adr ---- if Minus, PC <- adr
-            if (SF) goto JMP;
-            break;
-        case 0xc3: // JMP adr ---- PC <- adr
+        case 0xc2: if (!ZF) goto JMP; break;
+        case 0xca: if ( ZF) goto JMP; break;
+        case 0xd2: if (!CF) goto JMP; break;
+        case 0xda: if ( CF) goto JMP; break;
+        case 0xe2: if (!PF) goto JMP; break;
+        case 0xea: if ( PF) goto JMP; break;
+        case 0xf2: if (!SF) goto JMP; break;
+        case 0xfa: if ( SF) goto JMP; break;
+        case 0xc3:
 JMP:
             PCL = byte2;
             PCH = byte3;
