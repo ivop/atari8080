@@ -176,13 +176,15 @@ static uint8_t instruction, byte2, byte3;
 #include "cpm22/bdos.h"
 #include "cpm22/ccp.h"
 
+// OUT 0,A RET as BIOS trap function
+
 unsigned char bios_bin[] = {
-  0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00,
-  0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00,
-  0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00,
-  0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00,
-  0xfd, 0xc9, 0x00, 
-  // dpbase
+    0xd3, 0x00, 0xc9, 0xd3, 0x01, 0xc9, 0xd3, 0x02, 0xc9, 0xd3, 0x03, 0xc9,
+    0xd3, 0x04, 0xc9, 0xd3, 0x05, 0xc9, 0xd3, 0x06, 0xc9, 0xd3, 0x07, 0xc9,
+    0xd3, 0x08, 0xc9, 0xd3, 0x09, 0xc9, 0xd3, 0x0a, 0xc9, 0xd3, 0x0b, 0xc9,
+    0xd3, 0x0c, 0xc9, 0xd3, 0x0d, 0xc9, 0xd3, 0x0e, 0xc9, 0xd3, 0x0f, 0xc9,
+    0xd3, 0x10, 0xc9,
+    // dpbase dsk0:
   0x43, 0xfa, // trans
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x6c, 0xfa, // dirbf
@@ -267,17 +269,12 @@ static uint8_t track_number;
 static uint16_t sector_number;
 static FILE *dsk0;
 
-static void bios_entry(void) {
+static void bios_entry(int function) {
     int r;
 
-    if (PCH != 0xfa) {
-        dprintf("BIOS TRAP ERROR: wrong page! trying to run Z80 code?\n");
-        exit(1);
-    }
+    switch (function) {
 
-    switch (PCL) {
-
-    case 0x01 + 3*0:
+    case 0:
         biosprintf("BIOS: BOOT\n");
         
         memcpy(&mem[3][CPMB & 0x3fff], ccp_sys, ccp_sys_len);
@@ -295,7 +292,7 @@ static void bios_entry(void) {
 
         [[fallthrough]];
 
-    case 0x01 + 3*1:
+    case 1:
         biosprintf("BIOS: WBOOT\n");
 
 //        if (wbootcnt==1) cpudump++; else wbootcnt++;
@@ -322,45 +319,45 @@ static void bios_entry(void) {
         // Implement proper terminal with termios later so we can send
         // ^C et cetera... This is good enough for now.
 
-    case 0x01 + 3*2:
+    case 2:
 //        biosprintf("BIOS: CONST, return in A, 00=no pending, ff=pending\n");
         A = 0;
         break;
 
-    case 0x01 + 3*3:
+    case 3:
 //        biosprintf("BIOS: CONIN, return in A\n");
         A = getchar();
         break;
 
-    case 0x01 + 3*4:
+    case 4:
 //        biosprintf("BIOS: CONOUT, character in C = $%02X\n", C);
         printf("[32m%c[0m", C);     // we want some colors.
         fflush(stdout);
 //        putchar(C);
         break;
 
-    case 0x01 + 3*5:
+    case 5:
         biosprintf("BIOS: LIST\n");
         exit(1);
         break;
 
-    case 0x01 + 3*6:
+    case 6:
 //        biosprintf("BIOS: PUNCH\n");
         exit(1);
         break;
 
-    case 0x01 + 3*7:
+    case 7:
 //        biosprintf("BIOS: READER\n");
         exit(1);
         break;
 
-    case 0x01 + 3*8:
+    case 8:
 //        biosprintf("BIOS: HOME, settrk 0\n");
         track_number = 0;
         C = 0;
         break;
 
-    case 0x01 + 3*9:
+    case 9:
 //        biosprintf("BIOS: SELDSK C = drive = $%02X, ", C);
         H = 0;
         L = 0;
@@ -374,24 +371,24 @@ static void bios_entry(void) {
         }
         break;
 
-    case 0x01 + 3*10:
+    case 10:
 //        biosprintf("BIOS: SETTRK C = track = $%02X\n", C);
         track_number = C;
         break;
 
-    case 0x01 + 3*11:
+    case 11:
 //        biosprintf("BIOS: SETSEC C = sector number = $%02X\n", C);
         sector_number = C;
         break;
 
-    case 0x01 + 3*12:
+    case 12:
         dma_address = (B<<8) | C;
 //        biosprintf("BIOS: SETDMA BC = address = $%04X\n", dma_address);
         L = C;
         H = B;
         break;
 
-    case 0x01 + 3*13: {
+    case 13: {
 //        biosprintf("BIOS: READ, read status: ");
         int abssec = track_number * 26 + sector_number;
         int adr = dma_address;
@@ -413,7 +410,7 @@ static void bios_entry(void) {
         A = 0;
         break; }
 
-    case 0x01 + 3*14: {
+    case 14: {
 //        biosprintf("\t\tBIOS: WRITE ");
         int abssec = track_number * 26 + sector_number;
         int adr = dma_address;
@@ -438,12 +435,12 @@ static void bios_entry(void) {
         A = 0;
         break; }
 
-    case 0x01 + 3*15:
+    case 15:
         biosprintf("BIOS: LISTST\n");
         exit(1);
         break;
 
-    case 0x01 + 3*16:
+    case 16:
 //        biosprintf("BIOS: SECTRAN, BC = sector number = %04X\n", B<<8|C);
 //        biosprintf("BIOS: SECTRAN, DE = trans table = %04X\n", D<<8|E);
         A = C;
@@ -1248,6 +1245,7 @@ CALL:
         // ######################### OUT/IN #########################
         //
         case 0xd3: // OUT d8 ---- OUTput A to device num
+            bios_entry(byte2);
             break;
         case 0xdb: // IN d8 ---- INput from device num to A
             break;
@@ -1257,10 +1255,6 @@ CALL:
         case 0xf3: // DI ---- Disable Interrupts
             break;
         case 0xfb: // EI ---- Enable Interrupts
-            break;
-
-        case 0xfd:
-            bios_entry();
             break;
 
         case 0x08: // undefined
@@ -1274,6 +1268,7 @@ CALL:
         case 0xd9:
         case 0xdd:
         case 0xed:
+        case 0xfd:
             printf("CPU: undefined opcode: %02x\n", instruction);
             exit(1);
             break;
