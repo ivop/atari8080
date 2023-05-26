@@ -15,7 +15,7 @@ ponderings about how to implement this efficiently in assembly.
 My goal is ~20 6502 instructions per 8080 instruction on average. I never
 said this is going to run lightening fast :) A Rapidus expansion will speed
 it up tremendously. Chances are I'm going to run BDOS natively, too, (not just
-BIOS) and use CP/M 65 for that with a wrapper that transforms the BIOS
+BIOS) and use CP/M 65 for that with a wrapper that transforms the BDOS
 calls and return values. Perhaps even run the whole emulator on CP/M 65?  
 
 The 8080 core runs all validation sets correctly. Output:
