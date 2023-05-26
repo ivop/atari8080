@@ -173,6 +173,8 @@ static uint8_t instruction, byte2, byte3;
 // -------------------------------------------------------------------------
 
 #include "tables/tables.h"
+#include "cpm22/bdos.h"
+#include "cpm22/ccp.h"
 
 unsigned char bios_bin[] = {
   0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00, 0xfd, 0xc9, 0x00,
@@ -278,8 +280,8 @@ static void bios_entry(void) {
     case 0x01 + 3*0:
         biosprintf("BIOS: BOOT\n");
         
-        fseek(dsk0, 0, SEEK_SET);
-        r = fread(&mem[3][0x2400], 1, 0x1600, dsk0);
+        memcpy(&mem[3][CPMB & 0x3fff], ccp_sys, ccp_sys_len);
+        memcpy(&mem[3][BDOS & 0x3fff], bdos_sys, bdos_sys_len);
 
         printf("\r\n56k CP/M vers 2.2\r\n");
 
@@ -303,8 +305,8 @@ static void bios_entry(void) {
         // work just fine so far.
         // I tried inscreasing bdos' local stack, but there's not much room
         // left. Investigate later.
-        fseek(dsk0, 0, SEEK_SET);
-        r = fread(&mem[3][0x2400], 1, 0x1600, dsk0);
+        memcpy(&mem[3][CPMB & 0x3fff], ccp_sys, ccp_sys_len);
+        memcpy(&mem[3][BDOS & 0x3fff], bdos_sys, bdos_sys_len);
         ////////////////////////////////////////////
 
         memset(&zp, 0, sizeof(zp));
