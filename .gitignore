@@ -1,7 +1,7 @@
 *~
 .*.swp
 atari8080
-bootdisk.img
+disk.img
 bootsectors.bin
 tables/tablegen
 tables/tables.h

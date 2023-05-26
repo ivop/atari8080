@@ -1293,7 +1293,7 @@ int main(int argc, char **argv) {
     memcpy(&mem[3][BIOS&0x3fff], bios_bin, sizeof(bios_bin));
 
     if (argc != 2) {
-        fprintf(stderr, "usage: atari8080 bootdisk.img\n");
+        fprintf(stderr, "usage: atari8080 disk.img\n");
         return 1;
     }
 
