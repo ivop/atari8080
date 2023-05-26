@@ -148,8 +148,6 @@ static uint8_t instruction, byte2, byte3;
 
 #define CPMB    0xe400          // base of cpm console processor
 
-// See bios.asm. They are trapped by instruction 0xfd, followed by a RET
-
 #define BOOTF   (BIOS+3*0)     // cold boot
 #define WBOOTF  (BIOS+3*1)     // warm boot
 #define CONSTF  (BIOS+3*2)     // console status, A=0 no char, A=ff char
