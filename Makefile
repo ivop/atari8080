@@ -7,7 +7,6 @@ CPMFILES = \
 #	cpm2-plm/MAC.COM \
 #	cpm2-plm/LOAD.COM \
 #	tests/*.ASM \
-#	tests/*.MAC \
 
 CFLAGS += -O3
 
@@ -16,10 +15,10 @@ all: atari8080
 atari8080: atari8080.c Makefile disk.img tables/tables.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
 
-atari8080-bios-debug: atari8080.c Makefile bootdisk.img tables/tables.h
+atari8080-bios-debug: atari8080.c Makefile disk.img tables/tables.h
 	$(CC) $(CFLAGS) -DBIOSDEBUG -o $@ $< -lm
 
-atari8080-debug: atari8080.c Makefile bootdisk.img tables/tables.h
+atari8080-debug: atari8080.c Makefile disk.img tables/tables.h
 	$(CC) $(CFLAGS) -DBIOSDEBUG -DDEBUG -o $@ $< -lm
 
 disk.img: Makefile
