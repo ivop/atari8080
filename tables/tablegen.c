@@ -471,7 +471,7 @@ enum addressing_mode {\n\
                 y>>=1;
             }
             pf[x]=p*PF_FLAG;
-            printf("%1d, ", pf[x]);
+            printf("%02x, ", pf[x]);
         }
         printf("\n");
     }
@@ -484,7 +484,7 @@ enum addressing_mode {\n\
         for (int j=0; j<16; j++) {
             int x=i*16+j;
             zf[x]=(x==0)*ZF_FLAG;
-            printf("%1d, ", zf[x]);
+            printf("%02x, ", zf[x]);
         }
         printf("\n");
     }
@@ -497,7 +497,7 @@ enum addressing_mode {\n\
         for (int j=0; j<8; j++) {
             int x=i*8+j;
             sf[x]=(x>=0x80)*SF_FLAG;
-            printf("%1d, ", sf[x]);
+            printf("%02x, ", sf[x]);
         }
         printf("\n");
     }
@@ -508,7 +508,7 @@ enum addressing_mode {\n\
         printf("\t");
         for (int j=0; j<16; j++) {
             int x=i*16+j;
-            printf("%02x, ", zf[x] | sf[x] | pf[x] | 0x02);
+            printf("%02x, ", zf[x] | sf[x] | pf[x]);
         }
         printf("\n");
     }
