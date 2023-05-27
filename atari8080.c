@@ -1210,7 +1210,6 @@ CALL:
 
 struct termios orig_termios;
 static char *CLEAR     = "c";
-static char *RESET     = "c";
 
 static void reset_terminal_mode(void) {
     tcsetattr(0, TCSANOW, &orig_termios);
