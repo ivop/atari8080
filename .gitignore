@@ -1,8 +1,8 @@
 *~
 .*.swp
 atari8080
+atari8080-debug
 disk.img
 bootsectors.bin
 tables/tablegen
 tables/tables.h
-
