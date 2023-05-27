@@ -514,9 +514,9 @@ static void run_emulator(void) {
     uint8_t t8, M;
     int16_t t16;
     int32_t t32;
-    uint16_t BC, DE, HL, SP;    // note that this are temporaries and do
-                                // not directly reflect the state of the
-                                // registers! only used by DAD
+    uint16_t u16, BC, DE, HL, SP;  // note that this are temporaries and do
+                                   // not directly reflect the state of the
+                                   // registers! only used by DAD
 
     while(1 /*x--*/) {
         get_instruction();
@@ -605,38 +605,20 @@ static void run_emulator(void) {
         case 0x3e: A = byte2; break;
 
         // ######################### DAD #########################
-        //
-        case 0x09: // DAD B ---- HL = HL + BC [CY]
-            HL = (H<<8) | L;
-            BC = (B<<8) | C;
-            t32 = HL + BC;          // simple 16 bit addition, bcc/bcs
-            H = t32 >> 8;
-            L = t32 & 0xff;
+        // DAD XY                           HL = HK + XY    [CY]
+
+#define DAD(X,Y) \
+            HL = (H<<8) | L; \
+            u16 = (X<<8) | Y; \
+            t32 = HL + u16; \
+            H = t32 >> 8; \
+            L = t32 & 0xff; \
             CF = (t32 & 0x00010000) ? CF_FLAG : 0;
-            break;
-        case 0x19: // DAD D ---- HL = HL + DE [CY]
-            HL = (H<<8) | L;
-            DE = (D<<8) | E;
-            t32 = HL + DE;
-            H = t32 >> 8;
-            L = t32 & 0xff;
-            CF = (t32 & 0x00010000) ? CF_FLAG : 0;
-            break;
-        case 0x29: // DAD H ---- HL = HL + HL [CY]
-            HL = (H<<8) | L;
-            t32 = HL + HL;
-            H = t32 >> 8;
-            L = t32 & 0xff;
-            CF = (t32 & 0x00010000) ? CF_FLAG : 0;
-            break;
-        case 0x39: // DAD SP ---- HL = HL + SP [CY]
-            HL = (H<<8) | L;
-            SP = (SPH<<8) | SPL;
-            t32 = HL + SP;
-            H = t32 >> 8;
-            L = t32 & 0xff;
-            CF = (t32 & 0x00010000) ? CF_FLAG : 0;
-            break;
+
+        case 0x09: DAD(B,C); break;
+        case 0x19: DAD(D,E); break;
+        case 0x29: DAD(H,L); break;             // atari: remember HL+HL
+        case 0x39: DAD(SPH,SPL); break;
 
         // ######################### LOAD #########################
         //
@@ -941,44 +923,27 @@ RET:
             break;
 
         // ######################### POP/PUSH #########################
-        //
-        case 0xc1: // POP B ---- C <- (SP);B <- (SP+1);SP <- SP+2
-            C = mem_read(SPL, SPH);
-            SPL++;
+        // POP XY       Y <- (SP); X <- (SP+1); SP <- SP+2
+
+#define POP(X,Y) \
+            Y = mem_read(SPL, SPH); \
+            SPL++; \
+            if (SPL == 0) SPH++; \
+            X = mem_read(SPL, SPH); \
+            SPL++; \
             if (SPL == 0) SPH++;
-            B = mem_read(SPL, SPH);
-            SPL++;
-            if (SPL == 0) SPH++;
-            break;
-        case 0xd1: // POP D ---- E <- (SP);D <- (SP+1);SP <- SP+2
-            E = mem_read(SPL, SPH);
-            SPL++;
-            if (SPL == 0) SPH++;
-            D = mem_read(SPL, SPH);
-            SPL++;
-            if (SPL == 0) SPH++;
-            break;
-        case 0xe1: // POP H ---- L <- (SP);H <- (SP+1);SP <- SP+2
-            L = mem_read(SPL, SPH);
-            SPL++;
-            if (SPL == 0) SPH++;
-            H = mem_read(SPL, SPH);
-            SPL++;
-            if (SPL == 0) SPH++;
-            break;
-        case 0xf1: // POP PSW ---- flags <- (SP);A <- (SP+1);SP <- SP+2 [Z,S,P,CY,AC]
-            t8 = mem_read(SPL, SPH);
-            SPL++;
-            if (SPL == 0) SPH++;
-            A = mem_read(SPL, SPH);
-            SPL++;
-            if (SPL == 0) SPH++;
+
+        case 0xc1: POP(B,C); break;
+        case 0xd1: POP(D,E); break;
+        case 0xe1: POP(H,L); break;
+        case 0xf1: POP(A,t8);
             ZF = t8 & ZF_FLAG;
             SF = t8 & SF_FLAG;
             PF = t8 & PF_FLAG;
             AF = t8 & AF_FLAG;
             CF = t8 & CF_FLAG;
             break;
+
         case 0xc5: // PUSH B ---- (SP-2) <- C;(SP-1) <- B;SP <- SP-2
             SPL--;
             if (SPL == 0xff) SPH--;
