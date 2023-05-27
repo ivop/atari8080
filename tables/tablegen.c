@@ -364,7 +364,11 @@ enum {
     DO_CY
 };
 
-#define P_FLAG  0b0000100
+#define SF_FLAG     0b10000000
+#define ZF_FLAG     0b01000000
+#define AF_FLAG     0b00010000
+#define PF_FLAG     0b00000100
+#define CF_FLAG     0b00000001
 
 int main(int argc, char **argv) {
     printf("static const uint8_t instruction_length[256] = {\n");
@@ -454,41 +458,60 @@ enum addressing_mode {\n\
     }
 #endif
 
+    static uint8_t pf[256];
     printf("static const uint8_t pf_table[256] = {\n");
     for (int i=0; i<16; i++) {
         printf("\t");
         for (int j=0; j<16; j++) {
-            int x=i*16+j;
+            int y=i*16+j;
+            int x=y;
             int p=1;
-            while (x) {
-                p^=x&1;
-                x>>=1;
+            while (y) {
+                p^=y&1;
+                y>>=1;
             }
-            printf("%1d, ", p*P_FLAG);
+            pf[x]=p*PF_FLAG;
+            printf("%1d, ", pf[x]);
         }
         printf("\n");
     }
     printf("};\n\n");
 
+    static uint8_t zf[256];
     printf("static const uint8_t zf_table[256] = {\n");
     for (int i=0; i<16; i++) {
         printf("\t");
         for (int j=0; j<16; j++) {
             int x=i*16+j;
-            printf("%s, ", (x==0) ? "ZF_FLAG" : "0");
+            zf[x]=(x==0)*ZF_FLAG;
+            printf("%1d, ", zf[x]);
         }
         printf("\n");
     }
     printf("};\n\n");
 
+    static uint8_t sf[256];
     printf("static const uint8_t sf_table[256] = {\n");
     for (int i=0; i<32; i++) {
         printf("\t");
         for (int j=0; j<8; j++) {
             int x=i*8+j;
-            printf("%s, ", (x>=0x80) ? "SF_FLAG" : "0");
+            sf[x]=(x>=0x80)*SF_FLAG;
+            printf("%1d, ", sf[x]);
         }
         printf("\n");
     }
     printf("};\n\n");
+
+    printf("static const uint8_t zsp_table[256] = {\n");
+    for (int i=0; i<16; i++) {
+        printf("\t");
+        for (int j=0; j<16; j++) {
+            int x=i*16+j;
+            printf("%02x, ", zf[x] | sf[x] | pf[x] | 0x02);
+        }
+        printf("\n");
+    }
+    printf("};\n\n");
+
 }
