@@ -668,7 +668,7 @@ static void run_emulator(void) {
             A = ~A;
             break;
         case 0x3f: // CMC ---- CY=!CY [CY]
-            SET_CF(!CF);
+            SET_CF(!GET_CF());
             break;
 
         // ######################### MOV #########################
