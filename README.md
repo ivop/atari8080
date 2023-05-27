@@ -4,7 +4,7 @@ This is an Intel 8080 emulator, written in C, with the idea in mind to
 eventually implement the same virtual machine in 6502 assembly for
 the Atari 130XE computer.  
 
-It implements a minimal BIOS in C via a CPU trap instruction and runs
+It implements a minimal BIOS in C by interceping OUT (n),A and runs
 vanilla CP/M 2.2. There's no proper terminal handling yet. Just plain
 line input that gets fed character by character to the running OS.
 Emulated disk is an IBM 3740 but without sector skew. Eventually it'll
