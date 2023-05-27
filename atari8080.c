@@ -188,7 +188,7 @@ static uint8_t instruction, byte2, byte3;
 
 #ifdef DEBUG
 
-static int cpudump = 1, wbootcnt = 0;
+static int cpudump = 0, wbootcnt = 0;
 
 static void debug_print_cpu_state(void) {
     if (cpudump) {
@@ -199,6 +199,7 @@ static void debug_print_cpu_state(void) {
 }
 
 static void debug_print_instruction(void) {
+    if (cpudump) {
     fprintf(stderr, ">>> %s ", mnemonics[instruction]);
     int mode = modes[instruction];
     switch (mode) {
@@ -209,6 +210,7 @@ static void debug_print_instruction(void) {
     default:        break;
     }
     fprintf(stderr, "\n");
+    }
 }
 
 #else
@@ -254,12 +256,16 @@ static void bios_entry(int function) {
     case 1:         // wboot
         biosprintf("BIOS: WBOOT\n");
 
-//        if (wbootcnt==1) cpudump++; else wbootcnt++;
+#ifdef DEBUG
+        if (wbootcnt==1) cpudump++; else wbootcnt++;
+#endif
 
         // reload CCP
         memcpy(&mem[3][CPMB & 0x3fff], ccp_sys, ccp_sys_len);
         // there's still something fishy that overwrites bdos (8080exm)
+#ifndef DEBUG
         memcpy(&mem[3][BDOS & 0x3fff], bdos_sys, bdos_sys_len);
+#endif
 
         memset(&zp, 0, sizeof(zp));
 
@@ -751,7 +757,10 @@ static void run_emulator(void) {
         case 0x75: mem_write(L, H, L); break;
 
         case 0x76:
-            printf("HALT PC: %04X\n", ((PCH<<8)|PCL)-1);
+            fprintf(stderr, "HALT PC: %04X\n", ((PCH<<8)|PCL)-1);
+            if (PCH>=0xe4 && PCH<0xec)
+                fprintf(stderr, "serial check on bdos fail --> overwritten\n");
+            exit(1);
             break;       // HLT, not MOV M,M we don't halt :)
 
         case 0x77: mem_write(L, H, A); break;
