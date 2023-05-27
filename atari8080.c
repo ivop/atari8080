@@ -447,18 +447,12 @@ static void get_instruction(void) {
     debug_print_instruction();
 }
 
-// Emulate 64kB banked RAM, but CCP, BDOS and BIOS are blocked by a page of
-// ROM at $e000 turning it effectively into a 56kB machine, but BDOS can
-// hapily write to its directory buffer and allocation vector space.
-// Some programs need this so they can determine the upper limit of the TPA.
+// Emulate 64kB banked RAM.
 //
 // Atari: these are less frequent than instruction fetch, so save and restore
 // curbank.
 //
 static void mem_write(uint8_t LOW, uint8_t HIGH, uint8_t VAL) {
-    if (HIGH == 0xe0)   // ROM barrier
-        return;
-
     uint16_t adr = (HIGH<<8)+LOW;
     uint16_t pc = (PCH<<8)+PCL;
 #ifdef DEBUG
