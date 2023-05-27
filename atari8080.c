@@ -661,7 +661,7 @@ static void run_emulator(void) {
         case 0x1f: // RAR ---- A = A >> 1;bit 7 = prev CY;CY = prev bit 0 [CY]
             t8 = !!(A & 0x01);
             A >>= 1;
-            A |= CF ? 0x80 : 0;     // bit7 prev CF
+            A |= GET_CF() ? 0x80 : 0;     // bit7 prev CF
             SET_CF(t8);
             break;
         case 0x2f: // CMA ---- A <- !A
@@ -885,7 +885,7 @@ static void run_emulator(void) {
         case 0x17: // RAL ---- A = A << 1;bit 0 = prev CY;CY = prev bit 7 [CY]
             t8 = !!(A & 0x80);
             A <<= 1;
-            A |= !!CF;               // bit0 prev CF
+            A |= !!GET_CF();               // bit0 prev CF
             SET_CF(t8);
             break;
 
@@ -939,7 +939,7 @@ static void run_emulator(void) {
         case 0xc5: PUSH(B,C); break;
         case 0xd5: PUSH(D,E); break;
         case 0xe5: PUSH(H,L); break;
-        case 0xf5: t8 = SF | ZF | AF | PF | CF | 0x02; PUSH(A,t8); break;
+        case 0xf5: t8 = GET_SF() | GET_ZF() | GET_AF() | GET_PF() | GET_CF() | 0x02; PUSH(A,t8); break;
 
         // ######################### RETCETERA #########################
         //
