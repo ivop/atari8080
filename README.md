@@ -23,7 +23,7 @@ The 8080 core runs all validation sets correctly. Output:
 ```
 $ ./atari8080 bootdisk.img 
 
-56k CP/M vers 2.2
+64k CP/M vers 2.2
 
 A>tst8080
 MICROCOSM ASSOCIATES 8080/8085 CPU DIAGNOSTIC
