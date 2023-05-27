@@ -281,6 +281,7 @@ static void bios_entry(int function) {
 
     case 3:         // conin
         A = getchar();
+        if (A == 127) A = 8;
         if (A == 24) {      // ^X to exit emulator
             fclose(dsk0);
             exit(0);
