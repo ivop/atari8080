@@ -641,7 +641,7 @@ static void run_emulator(void) {
 
         // ######################### RRC/RAR/CMA/CMC #########################
         //
-        case 0x0f: // RRC ---- A = A >> 1;bit 7 = prev bit 0;CY = prev bit 0 [CY]
+        case 0x0f: // RRC --- A = A >> 1;bit 7 = prev bit 0;CY = prev bit 0 [CY]
             t8 = A & 1;
             A >>= 1;
             A |= t8 ? 0x80 : 0;
