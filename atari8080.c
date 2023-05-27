@@ -215,8 +215,6 @@ unsigned char bios_bin[] = {
 
 // Tons of debug output. Might cut down on it a little.
 
-static int cpudump = 0, wbootcnt = 0;
-
 #ifdef BIOSDEBUG
 #define biosprintf(...) fprintf(stderr, __VA_ARGS__)
 #else
@@ -224,6 +222,8 @@ static int cpudump = 0, wbootcnt = 0;
 #endif
 
 #ifdef DEBUG
+
+static int cpudump = 1, wbootcnt = 0;
 
 static void debug_print_cpu_state(void) {
     if (cpudump) {
@@ -234,25 +234,22 @@ static void debug_print_cpu_state(void) {
 }
 
 static void debug_print_instruction(void) {
-    // printf("instruction: %02X: [1;34m%s ", instruction, mnemonics[instruction]);
+    fprintf(stderr, ">>> %s ", mnemonics[instruction]);
     int mode = modes[instruction];
     switch (mode) {
-    case MODE_D8:   printf("%02XH", byte2);   break;
+    case MODE_D8:   fprintf(stderr, "%02XH", byte2);   break;
     case MODE_D16:
     case MODE_ADR:
-    case MODE_JMP:  printf("%02X%02XH", byte3, byte2); break;
+    case MODE_JMP:  fprintf(stderr, "%02X%02XH", byte3, byte2); break;
     default:        break;
     }
-    printf("[0m\n");
+    fprintf(stderr, "\n");
 }
-
-#define dprintf(...) fprintf(stderr, __VA_ARGS__)
 
 #else
 
 #define debug_print_cpu_state()
 #define debug_print_instruction()
-#define dprintf(...)
 
 #endif
 
@@ -455,6 +452,8 @@ static void get_instruction(void) {
         byte3 = mem[curbank][(PCHa<<8) | PCL];
         increment_PC();
     }
+
+    debug_print_instruction();
 }
 
 // Emulate 64kB banked RAM, but CCP, BDOS and BIOS are blocked by a page of
@@ -471,9 +470,11 @@ static void mem_write(uint8_t LOW, uint8_t HIGH, uint8_t VAL) {
 
     uint16_t adr = (HIGH<<8)+LOW;
     uint16_t pc = (PCH<<8)+PCL;
+#ifdef DEBUG
     if (adr >= BDOS && pc < CPMB) {
-        fprintf(stderr, "Write to BDOS area from userland PC:%04X\n", pc);
+        fprintf(stderr, "write to BDOS area %04X from PC:%04X\n",adr,  pc);
     }
+#endif
 
     uint8_t savebank = curbank;
                                     // atari: here is where we adjust B, D, H
@@ -528,8 +529,6 @@ static void run_emulator(void) {
 
     while(1 /*x--*/) {
         get_instruction();
-
-//        dprintf(">>>> execute <<<<\n");
 
         switch(instruction) {       // atari jump table
 
