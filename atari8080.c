@@ -270,9 +270,7 @@ static void bios_entry(int function) {
         // reload CCP
         memcpy(&mem[3][CPMB & 0x3fff], ccp_sys, ccp_sys_len);
         // there's still something fishy that overwrites bdos (8080exm)
-#ifndef DEBUG
-        memcpy(&mem[3][BDOS & 0x3fff], bdos_sys, bdos_sys_len);
-#else
+#ifdef DEBUG
         print_bdos_serial();
 #endif
 
@@ -900,28 +898,6 @@ static void run_emulator(void) {
             CF = CF_FLAG;
             break;
 
-        // ######################### RETCETERA #########################
-        //
-        case 0xc0: if (!ZF) goto RET; break;
-        case 0xc8: if ( ZF) goto RET; break;
-        case 0xd0: if (!CF) goto RET; break;
-        case 0xd8: if ( CF) goto RET; break;
-        case 0xe0: if (!PF) goto RET; break;
-        case 0xe8: if ( PF) goto RET; break;
-        case 0xf0: if (!SF) goto RET; break;
-        case 0xf8: if ( SF) goto RET; break;
-        case 0xc9: // RET ---- PC.lo <- (SP);PC.hi <- (SP+1);SP <- SP+2
-RET:
-            PCL = mem_read(SPL, SPH);
-            SPL++;
-            if (SPL == 0) SPH++;
-            PCH = mem_read(SPL, SPH);
-            SPL++;
-            if (SPL == 0) SPH++;
-            PCHa = PCH & 0x3f;      // adjust!!
-            curbank = PCH>>6;
-            break;
-
         // ######################### POP/PUSH #########################
         // POP XY       Y <- (SP); X <- (SP+1); SP <- SP+2
 
@@ -944,40 +920,36 @@ RET:
             CF = t8 & CF_FLAG;
             break;
 
-        case 0xc5: // PUSH B ---- (SP-2) <- C;(SP-1) <- B;SP <- SP-2
-            SPL--;
-            if (SPL == 0xff) SPH--;
-            mem_write(SPL, SPH, B);
-            SPL--;
-            if (SPL == 0xff) SPH--;
-            mem_write(SPL, SPH, C);
-            break;
-        case 0xd5: // PUSH D ---- (SP-2) <- E;(SP-1) <- D;SP <- SP-2
-            SPL--;
-            if (SPL == 0xff) SPH--;
-            mem_write(SPL, SPH, D);
-            SPL--;
-            if (SPL == 0xff) SPH--;
-            mem_write(SPL, SPH, E);
-            break;
-        case 0xe5: // PUSH H ---- (SP-2) <- L;(SP-1) <- H;SP <- SP - 2
-            SPL--;
-            if (SPL == 0xff) SPH--;
-            mem_write(SPL, SPH, H);
-            SPL--;
-            if (SPL == 0xff) SPH--;
-            mem_write(SPL, SPH, L);
-            break;
-        case 0xf5: // PUSH PSW ---- (SP-2)<-flags;(SP-1)<-A;SP <- SP-2
-            SPL--;
-            if (SPL == 0xff) SPH--;
-            mem_write(SPL, SPH, A);
-            SPL--;
-            if (SPL == 0xff) SPH--;
-            t8 = SF | ZF | AF | PF | CF | 0x02;
-            mem_write(SPL, SPH, t8);
-            break;
+        // PUSH XY      (SP-2) <- Y; (SP-1) <- X; SP <- SP-2
+#define PUSH(X,Y) \
+            SPL--; \
+            if (SPL == 0xff) SPH--; \
+            mem_write(SPL, SPH, X); \
+            SPL--; \
+            if (SPL == 0xff) SPH--; \
+            mem_write(SPL, SPH, Y);
 
+        case 0xc5: PUSH(B,C); break;
+        case 0xd5: PUSH(D,E); break;
+        case 0xe5: PUSH(H,L); break;
+        case 0xf5: t8 = SF | ZF | AF | PF | CF | 0x02; PUSH(A,t8); break;
+
+        // ######################### RETCETERA #########################
+        //
+        case 0xc0: if (!ZF) goto RET; break;
+        case 0xc8: if ( ZF) goto RET; break;
+        case 0xd0: if (!CF) goto RET; break;
+        case 0xd8: if ( CF) goto RET; break;
+        case 0xe0: if (!PF) goto RET; break;
+        case 0xe8: if ( PF) goto RET; break;
+        case 0xf0: if (!SF) goto RET; break;
+        case 0xf8: if ( SF) goto RET; break;
+        case 0xc9: // RET ---- PC.lo <- (SP);PC.hi <- (SP+1);SP <- SP+2
+RET:
+            POP(PCH,PCL);
+            PCHa = PCH & 0x3f;      // adjust!!
+            curbank = PCH>>6;
+            break;
 
         // ######################### JMP #########################
         //
@@ -1009,12 +981,7 @@ JMP:
         case 0xfc: if ( SF) goto CALL; break;
         case 0xcd:
 CALL:       
-            SPL--;
-            if (SPL == 0xff) SPH--;
-            mem_write(SPL, SPH, PCH);
-            SPL--;
-            if (SPL == 0xff) SPH--;
-            mem_write(SPL, SPH, PCL);
+            PUSH(PCH,PCL);
             PCL = byte2;
             PCH = byte3;
             PCHa = PCH & 0x3f;      // adjust!
