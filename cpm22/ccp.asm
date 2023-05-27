@@ -1134,7 +1134,7 @@ user:
 	jmp	endcom
 
 userfunc:
-	ifndef	noserialize
+	ifndef	noserial
 	call	serialize	;check serialization
 	endif
 	;load user function and set up for execution
