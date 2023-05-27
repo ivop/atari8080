@@ -220,6 +220,13 @@ static void debug_print_instruction(void) {
 
 #endif
 
+static void print_bdos_serial() {
+    fprintf(stderr, "BDOS serial: ");
+    for (int i=0; i<6; i++)
+        fprintf(stderr, "%02X ", mem[3][(BDOS&0x3fff)+i]);
+    fprintf(stderr, "\n");
+}
+
 // -------------------------------------------------------------------------
 
 static void mem_write(uint8_t LOW, uint8_t HIGH, uint8_t VAL);
@@ -265,6 +272,8 @@ static void bios_entry(int function) {
         // there's still something fishy that overwrites bdos (8080exm)
 #ifndef DEBUG
         memcpy(&mem[3][BDOS & 0x3fff], bdos_sys, bdos_sys_len);
+#else
+        print_bdos_serial();
 #endif
 
         memset(&zp, 0, sizeof(zp));
@@ -458,6 +467,9 @@ static void mem_write(uint8_t LOW, uint8_t HIGH, uint8_t VAL) {
     }
     if (adr >= BDOS && pc >= CPMB && pc < BDOS) {
         fprintf(stderr, "CPP writes to BDOS area %04X from PC:%04X\n",adr,  pc);
+    }
+    if (adr >= BDOS && pc >= CPMB && pc > BDOS) {
+        fprintf(stderr, "BDOS writes to BDOS area %04X from PC:%04X\n",adr,  pc);
     }
 #endif
 
@@ -761,9 +773,11 @@ static void run_emulator(void) {
 
         case 0x76:
             fprintf(stderr, "HALT PC: %04X\n", ((PCH<<8)|PCL)-1);
-            if (PCH>=0xe4 && PCH<0xec)
+            if (PCH>=0xe4 && PCH<0xec) {
                 fprintf(stderr, "serial check on bdos fail --> overwritten\n");
-            exit(1);
+                print_bdos_serial();
+                exit(1);
+            }
             break;       // HLT, not MOV M,M we don't halt :)
 
         case 0x77: mem_write(L, H, A); break;
