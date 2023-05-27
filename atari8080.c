@@ -275,7 +275,7 @@ static void bios_entry(int function) {
         memcpy(&mem[3][CPMB & 0x3fff], ccp_sys, ccp_sys_len);
         memcpy(&mem[3][BDOS & 0x3fff], bdos_sys, bdos_sys_len);
 
-        printf("\r\n56k CP/M vers 2.2\r\n");
+        printf("\r\n64k CP/M vers 2.2\r\n");
 
         mem[0][0x0000] = 0xc3;   // JMP $FA03 WBOOT
         mem[0][0x0001] = WBOOTF & 0xff;
