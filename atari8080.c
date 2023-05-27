@@ -269,7 +269,6 @@ static void bios_entry(int function) {
 
         // reload CCP
         memcpy(&mem[3][CPMB & 0x3fff], ccp_sys, ccp_sys_len);
-        // there's still something fishy that overwrites bdos (8080exm)
 #ifdef DEBUG
         print_bdos_serial();
 #endif
