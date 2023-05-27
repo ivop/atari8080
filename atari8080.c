@@ -497,10 +497,9 @@ static uint8_t mem_read(uint8_t LOW, uint8_t HIGH) {
 #define SET_PF(expr)    if(expr) F |= PF_FLAG; else F &= ~PF_FLAG;
 #define GET_PF()        (F&PF_FLAG)
 
-static void eval_zsp_flags(uint8_t VAL) {
-    F &= ~(ZF_FLAG | SF_FLAG | PF_FLAG);
+#define SET_ZSP(VAL) \
+    F &= ~(ZF_FLAG | SF_FLAG | PF_FLAG); \
     F |=  zsp_table[VAL];
-}
 
 // -------------------------------------------------------------------------
 
@@ -566,7 +565,7 @@ static void run_emulator(void) {
         // ######################### INR #########################
         // INR reg = reg + 1                [Z,S,P,AC]
 
-#define INR(reg) reg+=1; SET_AF( (reg&0x0f)==0 ); eval_zsp_flags(reg);
+#define INR(reg) reg+=1; SET_AF( (reg&0x0f)==0 ); SET_ZSP(reg);
 
         case 0x04: INR(B); break;
         case 0x0c: INR(C); break;
@@ -580,7 +579,7 @@ static void run_emulator(void) {
         // ######################### DCR #########################
         // DCR reg = reg - 1                [Z,S,P,AC]
 
-#define DCR(reg) reg-=1; SET_AF( !((reg&0x0f)==0x0f) ); eval_zsp_flags(reg);
+#define DCR(reg) reg-=1; SET_AF( !((reg&0x0f)==0x0f) ); SET_ZSP(reg);
 
         case 0x05: DCR(B); break;
         case 0x0d: DCR(C); break;
@@ -756,7 +755,7 @@ static void run_emulator(void) {
             SET_CF( ((z ^ A ^ (val)) & 0x0100) ); \
             SET_AF( ((z ^ A ^ (val)) & 0x0010) ); \
             A = z; \
-            eval_zsp_flags(A);
+            SET_ZSP(A);
 
         case 0x80: ADD(B,0); break;
         case 0x81: ADD(C,0); break;
@@ -812,7 +811,7 @@ static void run_emulator(void) {
                  SET_CF(0); \
                  SET_AF( ((A | val) & 0x08) != 0 ); \
                  A = t8; \
-                 eval_zsp_flags(A);
+                 SET_ZSP(A);
 
         case 0xa0: ANA(B); break;
         case 0xa1: ANA(C); break;
@@ -826,7 +825,7 @@ static void run_emulator(void) {
         // ######################### XRA #########################
         // A = A ^ val                      [Z,S,P,CY,AC]
 
-#define XRA(val) A = A^val; SET_AF(0); SET_CF(0); eval_zsp_flags(A);
+#define XRA(val) A = A^val; F=ONE_FLAG; SET_ZSP(A);
 
         case 0xa8: XRA(B); break;
         case 0xa9: XRA(C); break;
@@ -840,7 +839,7 @@ static void run_emulator(void) {
         // ######################### ORA #########################
         // A = A | val                      [Z,S,P,CY,AC]
 
-#define ORA(val) A = A|val; SET_AF(0); SET_CF(0); eval_zsp_flags(A);
+#define ORA(val) A = A|val; F=ONE_FLAG; SET_ZSP(A);
 
         case 0xb0: ORA(B); break;
         case 0xb1: ORA(C); break;
@@ -857,7 +856,7 @@ static void run_emulator(void) {
 #define CMP(val) z = A - val; \
                  SET_CF(z>>8); \
                  SET_AF( (~(A ^ z ^ val)) & 0x10 ); \
-                 eval_zsp_flags(z&0xff);
+                 SET_ZSP(z&0xff);
 
         case 0xb8: CMP(B); break;
         case 0xb9: CMP(C); break;
