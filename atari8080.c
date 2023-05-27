@@ -283,9 +283,6 @@ static void bios_entry(int function) {
         biosprintf("NEWPC: %02X%02X\n", PCH, PCL);
         break;
 
-        // Implement proper terminal with termios later so we can send
-        // ^C et cetera... This is good enough for now.
-
     case 2:         // const
         if (kbhit())
             A = 0xff;
