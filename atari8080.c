@@ -109,18 +109,16 @@ struct __attribute__((packed, aligned(1))) zp {
 //
 // |S|Z|0|A|0|P|1|C|
 
-// Or a single F later if the emulation is 100%
-//
-// Tradeoff: speed of checking flags (fast now) and (re)setting flags after
-// an ALU operation (slow now). Perhaps the reverse is faster overall.
-
-static uint8_t SF, ZF, AF, PF, CF;
+static uint8_t F = 0x02;
 
 #define SF_FLAG     0b10000000
 #define ZF_FLAG     0b01000000
 #define AF_FLAG     0b00010000
 #define PF_FLAG     0b00000100
+#define ONE_FLAG    0b00000010      // always set!
 #define CF_FLAG     0b00000001
+
+#define ALL_FLAGS   (SF_FLAG | ZF_FLAG | AF_FLAG | PF_FLAG | ONE_FLAG | CF_FLAG)
 
 // Used during instruction fetch
 
@@ -194,7 +192,7 @@ static void debug_print_cpu_state(void) {
     if (cpudump) {
     fprintf(stderr, "PC:%02X%02X A:%02X B:%02X C:%02X D:%02X E:%02X H:%02X L:%02X "
            "SP:%02X%02X ", PCH, PCL, A, B, C, D, E, H, L, SPH, SPL);
-    fprintf(stderr, "S:%d Z:%d A:%d P:%d C:%d\n", !!SF, !!ZF, !!AF, !!PF, !!CF);
+    fprintf(stderr, "S:%d Z:%d A:%d P:%d C:%d // F:%02x\n", !!F&SF_FLAG, !!F&ZF_FLAG, !!F&AF_FLAG, !!F&PF_FLAG, !!F&CF_FLAG, F);
     }
 }
 
@@ -491,6 +489,8 @@ static uint8_t mem_read(uint8_t LOW, uint8_t HIGH) {
 // Or change this to a single combined table if I decide to go with a single
 // F register. Decisions, decisions, decisions.
 
+#if 0
+
 #define SET_CF(expr)    CF = (expr) ? CF_FLAG : 0;
 #define GET_CF()        (CF)
 #define SET_AF(expr)    AF = (expr) ? AF_FLAG : 0;
@@ -502,10 +502,27 @@ static uint8_t mem_read(uint8_t LOW, uint8_t HIGH) {
 #define SET_PF(expr)    PF = (expr) ? PF_FLAG : 0;
 #define GET_PF()        (PF)
 
+#else
+
+#define SET_CF(expr)    if(expr) F |= CF_FLAG; else F &= CF_FLAG^0xff;
+#define GET_CF()        (F&CF_FLAG)
+#define SET_AF(expr)    if(expr) F |= AF_FLAG; else F &= AF_FLAG^0xff;
+#define GET_AF()        (F&AF_FLAG)
+#define SET_ZF(expr)    if(expr) F |= ZF_FLAG; else F &= ZF_FLAG^0xff;
+#define GET_ZF()        (F&ZF_FLAG)
+#define SET_SF(expr)    if(expr) F |= SF_FLAG; else F &= SF_FLAG^0xff;
+#define GET_SF()        (F&SF_FLAG)
+#define SET_PF(expr)    if(expr) F |= PF_FLAG; else F &= PF_FLAG^0xff;
+#define GET_PF()        (F&PF_FLAG)
+
+#endif
+
 static void eval_zsp_flags(uint8_t VAL) {
     SET_ZF(zf_table[VAL]);
     SET_SF(sf_table[VAL]);
     SET_PF(pf_table[VAL]);
+//    F &= ~zsp_table[VAL];
+//    F |=  zsp_table[VAL];
 }
 
 // -------------------------------------------------------------------------
@@ -788,7 +805,7 @@ static void run_emulator(void) {
         // ######################### SUB #########################
         // A = A + ~val + !carry
 
-#define SUB(val, car) ADD(~val, !car); SET_CF(!CF);
+#define SUB(val, car) ADD(~val, !car); SET_CF(!GET_CF());
 
         case 0x90: SUB(B, 0); break;
         case 0x91: SUB(C, 0); break;
@@ -919,12 +936,9 @@ static void run_emulator(void) {
         case 0xc1: POP(B,C); break;
         case 0xd1: POP(D,E); break;
         case 0xe1: POP(H,L); break;
-        case 0xf1: POP(A,t8);
-            SET_ZF(t8 & ZF_FLAG);
-            SET_SF(t8 & SF_FLAG);
-            SET_PF(t8 & PF_FLAG);
-            SET_AF(t8 & AF_FLAG);
-            SET_CF(t8 & CF_FLAG);
+        case 0xf1: POP(A,F);
+                   F |= ONE_FLAG;       // won't pass tests without it
+                   F &= ALL_FLAGS;
             break;
 
         // PUSH XY      (SP-2) <- Y; (SP-1) <- X; SP <- SP-2
@@ -939,7 +953,7 @@ static void run_emulator(void) {
         case 0xc5: PUSH(B,C); break;
         case 0xd5: PUSH(D,E); break;
         case 0xe5: PUSH(H,L); break;
-        case 0xf5: t8 = GET_SF() | GET_ZF() | GET_AF() | GET_PF() | GET_CF() | 0x02; PUSH(A,t8); break;
+        case 0xf5: PUSH(A,F); break;
 
         // ######################### RETCETERA #########################
         //
