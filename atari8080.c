@@ -167,7 +167,7 @@ static uint8_t instruction, byte2, byte3;
 #define LISTSTF (BIOS+3*15)    // list status (ignore) (A=0=not ready)
 #define SECTRAN (BIOS+3*16)    // sector translate (in BC, out in HL)
 
-#define DPBASE  (BIOS + 17*3)   // see bios.asm
+#define DPBASE  (BIOS + 17*3)  // see below
 
 // -------------------------------------------------------------------------
 
@@ -198,14 +198,14 @@ unsigned char bios_bin[] = {
   // dpblk
   0x19, 0x1a,
   0x1a, 0x00, // sectors per track
-  0x03,
-  0x07,
-  0x00,
-  0xf2, 0x00,
-  0x3f, 0x00,
-  0xc0, 0x00,
-  0x10, 0x00,
-  0x02, 0x00,
+  0x03,       // block shift factor
+  0x07,       // block mask
+  0x00,       // null mask (extent mask)
+  0xf2, 0x00, // disk size-1
+  0x3f, 0x00, // directory entries-1
+  0xc0, 0x00, // alloc 0
+  0x10, 0x00, // alloc 1
+  0x02, 0x00, // track offset (reserved tracks)
   
   // dirbf
   // all00
