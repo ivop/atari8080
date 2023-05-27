@@ -246,7 +246,7 @@ static void debug_print_instruction(void) {
     printf("[0m\n");
 }
 
-#define dprintf printf
+#define dprintf(...) fprintf(stderr, __VA_ARGS__)
 
 #else
 
@@ -293,14 +293,8 @@ static void bios_entry(int function) {
 
 //        if (wbootcnt==1) cpudump++; else wbootcnt++;
 
-        // Not sure what happens here, but 8080exm screws up bdos
-        // so relead on warmstart. This should not happen. Other programs
-        // work just fine so far.
-        // I tried inscreasing bdos' local stack, but there's not much room
-        // left. Investigate later.
+        // reload CCP
         memcpy(&mem[3][CPMB & 0x3fff], ccp_sys, ccp_sys_len);
-        memcpy(&mem[3][BDOS & 0x3fff], bdos_sys, bdos_sys_len);
-        ////////////////////////////////////////////
 
         memset(&zp, 0, sizeof(zp));
 
@@ -474,10 +468,13 @@ static void get_instruction(void) {
 static void mem_write(uint8_t LOW, uint8_t HIGH, uint8_t VAL) {
     if (HIGH == 0xe0)   // ROM barrier
         return;
+
     uint16_t adr = (HIGH<<8)+LOW;
-    if (adr==0xe401) {
-        fprintf(stderr, "write to 0xe401\n");
+    uint16_t pc = (PCH<<8)+PCL;
+    if (adr >= BDOS && pc < CPMB) {
+        fprintf(stderr, "Write to BDOS area from userland PC:%04X\n", pc);
     }
+
     uint8_t savebank = curbank;
                                     // atari: here is where we adjust B, D, H
     curbank = HIGH>>6;              // table lookup

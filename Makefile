@@ -4,6 +4,7 @@ CPMFILES = \
 	cpm2-plm/DUMP.COM \
 	cpm2-plm/PIP.COM \
 	tests/*.COM \
+	misc/* \
 #	cpm2-plm/MAC.COM \
 #	cpm2-plm/LOAD.COM \
 #	tests/*.ASM \
