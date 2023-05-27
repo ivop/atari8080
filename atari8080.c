@@ -504,15 +504,15 @@ static uint8_t mem_read(uint8_t LOW, uint8_t HIGH) {
 
 #else
 
-#define SET_CF(expr)    if(expr) F |= CF_FLAG; else F &= CF_FLAG^0xff;
+#define SET_CF(expr)    if(expr) F |= CF_FLAG; else F &= ~CF_FLAG;
 #define GET_CF()        (F&CF_FLAG)
-#define SET_AF(expr)    if(expr) F |= AF_FLAG; else F &= AF_FLAG^0xff;
+#define SET_AF(expr)    if(expr) F |= AF_FLAG; else F &= ~AF_FLAG;
 #define GET_AF()        (F&AF_FLAG)
-#define SET_ZF(expr)    if(expr) F |= ZF_FLAG; else F &= ZF_FLAG^0xff;
+#define SET_ZF(expr)    if(expr) F |= ZF_FLAG; else F &= ~ZF_FLAG;
 #define GET_ZF()        (F&ZF_FLAG)
-#define SET_SF(expr)    if(expr) F |= SF_FLAG; else F &= SF_FLAG^0xff;
+#define SET_SF(expr)    if(expr) F |= SF_FLAG; else F &= ~SF_FLAG;
 #define GET_SF()        (F&SF_FLAG)
-#define SET_PF(expr)    if(expr) F |= PF_FLAG; else F &= PF_FLAG^0xff;
+#define SET_PF(expr)    if(expr) F |= PF_FLAG; else F &= ~PF_FLAG;
 #define GET_PF()        (F&PF_FLAG)
 
 #endif
