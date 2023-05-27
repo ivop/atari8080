@@ -258,6 +258,8 @@ static void bios_entry(int function) {
 
         // reload CCP
         memcpy(&mem[3][CPMB & 0x3fff], ccp_sys, ccp_sys_len);
+        // there's still something fishy that overwrites bdos (8080exm)
+        memcpy(&mem[3][BDOS & 0x3fff], bdos_sys, bdos_sys_len);
 
         memset(&zp, 0, sizeof(zp));
 
@@ -658,23 +660,11 @@ static void run_emulator(void) {
             break;
 
         // ######################### DCX #########################
-        //
-        case 0x0b: // DCX B ---- BC = BC-1
-            C--;
-            if (C == 0xff) B--;
-            break;
-        case 0x1b: // DCX D ---- DE = DE-1
-            E--;
-            if (E == 0xff) D--;
-            break;
-        case 0x2b: // DCX H ---- HL = HL-1
-            L--;
-            if (L == 0xff) H--;
-            break;
-        case 0x3b: // DCX SP ---- SP = SP-1
-            SPL--;
-            if (SPL == 0xff) SPH--;
-            break;
+        // DCX reg
+        case 0x0b:   C--; if (  C == 0xff) B--; break;
+        case 0x1b:   E--; if (  E == 0xff) D--; break;
+        case 0x2b:   L--; if (  L == 0xff) H--; break;
+        case 0x3b: SPL--; if (SPL == 0xff) SPH--; break;
 
         // ######################### RRC/RAR/CMA/CMC #########################
         //
@@ -928,30 +918,14 @@ static void run_emulator(void) {
 
         // ######################### RETCETERA #########################
         //
-        case 0xc0: // RNZ ---- if NZ, RET
-            if (!ZF) goto RET;
-            break;
-        case 0xc8: // RZ ---- if Z, RET
-            if (ZF) goto RET;
-            break;
-        case 0xd0: // RNC ---- if NCY, RET
-            if (!CF) goto RET;
-            break;
-        case 0xd8: // RC ---- if CY, RET
-            if (CF) goto RET;
-            break;
-        case 0xe0: // RPO ---- if POdd, RET
-            if (!PF) goto RET;
-            break;
-        case 0xe8: // RPE ---- if PEven, RET
-            if (PF) goto RET;
-            break;
-        case 0xf0: // RP ---- if Plus, RET
-            if (!SF) goto RET;
-            break;
-        case 0xf8: // RM ---- if Minus, RET
-            if (SF) goto RET;
-            break;
+        case 0xc0: if (!ZF) goto RET; break;
+        case 0xc8: if ( ZF) goto RET; break;
+        case 0xd0: if (!CF) goto RET; break;
+        case 0xd8: if ( CF) goto RET; break;
+        case 0xe0: if (!PF) goto RET; break;
+        case 0xe8: if ( PF) goto RET; break;
+        case 0xf0: if (!SF) goto RET; break;
+        case 0xf8: if ( SF) goto RET; break;
         case 0xc9: // RET ---- PC.lo <- (SP);PC.hi <- (SP+1);SP <- SP+2
 RET:
             PCL = mem_read(SPL, SPH);
@@ -1058,31 +1032,15 @@ JMP:
 
         // ######################### CALL/RST #########################
         //
-        case 0xc4: // CNZ adr ---- if NZ, CALL adr
-            if (!ZF) goto CALL;
-            break;
-        case 0xcc: // CZ adr ---- if Z, CALL adr
-            if (ZF) goto CALL;
-            break;
-        case 0xd4: // CNC adr ---- if NCY, CALL adr
-            if (!CF) goto CALL;
-            break;
-        case 0xdc: // CC adr ---- if CY, CALL adr
-            if (CF) goto CALL;
-            break;
-        case 0xe4: // CPO adr ---- if POdd, CALL adr
-            if (!PF) goto CALL;
-            break;
-        case 0xec: // CPE adr ---- if PEven, CALL adr
-            if (PF) goto CALL;
-            break;
-        case 0xf4: // CP adr ---- if Plus, PC <- adr
-            if (!SF) goto CALL;
-            break;
-        case 0xfc: // CM adr ---- if Minus, CALL adr
-            if (SF) goto CALL;
-            break;
-        case 0xcd: // CALL adr ---- (SP-1) <- PC.hi;(SP-2) <- PC.lo;SP <- SP-2;PC <- adr
+        case 0xc4: if (!ZF) goto CALL; break;
+        case 0xcc: if ( ZF) goto CALL; break;
+        case 0xd4: if (!CF) goto CALL; break;
+        case 0xdc: if ( CF) goto CALL; break;
+        case 0xe4: if (!PF) goto CALL; break;
+        case 0xec: if ( PF) goto CALL; break;
+        case 0xf4: if (!SF) goto CALL; break;
+        case 0xfc: if ( SF) goto CALL; break;
+        case 0xcd:
 CALL:       
             SPL--;
             if (SPL == 0xff) SPH--;
@@ -1095,30 +1053,14 @@ CALL:
             PCHa = PCH & 0x3f;      // adjust!
             curbank = PCH>>6;
             break;
-        case 0xc7: // RST 0 ---- CALL 00H
-            byte2 = byte3 = 0; goto CALL;
-            break;
-        case 0xcf: // RST 1 ---- CALL 08H
-            byte2 = 0x08; byte3 = 0; goto CALL;
-            break;
-        case 0xd7: // RST 2 ---- CALL 10H
-            byte2 = 0x10; byte3 = 0; goto CALL;
-            break;
-        case 0xdf: // RST 3 ---- CALL 18H
-            byte2 = 0x18; byte3 = 0; goto CALL;
-            break;
-        case 0xe7: // RST 4 ---- CALL 20H
-            byte2 = 0x20; byte3 = 0; goto CALL;
-            break;
-        case 0xef: // RST 5 ---- CALL 28H
-            byte2 = 0x28; byte3 = 0; goto CALL;
-            break;
-        case 0xf7: // RST 6 ---- CALL 30H
-            byte2 = 0x30; byte3 = 0; goto CALL;
-            break;
-        case 0xff: // RST 7 ---- CALL 38H
-            byte2 = 0x38; byte3 = 0; goto CALL;
-            break;
+        case 0xc7: byte2 = 0x00; byte3 = 0; goto CALL; break;
+        case 0xcf: byte2 = 0x08; byte3 = 0; goto CALL; break;
+        case 0xd7: byte2 = 0x10; byte3 = 0; goto CALL; break;
+        case 0xdf: byte2 = 0x18; byte3 = 0; goto CALL; break;
+        case 0xe7: byte2 = 0x20; byte3 = 0; goto CALL; break;
+        case 0xef: byte2 = 0x28; byte3 = 0; goto CALL; break;
+        case 0xf7: byte2 = 0x30; byte3 = 0; goto CALL; break;
+        case 0xff: byte2 = 0x38; byte3 = 0; goto CALL; break;
 
 
         // ######################### IMMEDIATE #########################
