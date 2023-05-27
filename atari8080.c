@@ -456,6 +456,9 @@ static void mem_write(uint8_t LOW, uint8_t HIGH, uint8_t VAL) {
     if (adr >= BDOS && pc < CPMB) {
         fprintf(stderr, "write to BDOS area %04X from PC:%04X\n",adr,  pc);
     }
+    if (adr >= BDOS && pc >= CPMB && pc < BDOS) {
+        fprintf(stderr, "CPP writes to BDOS area %04X from PC:%04X\n",adr,  pc);
+    }
 #endif
 
     uint8_t savebank = curbank;
