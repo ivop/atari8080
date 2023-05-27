@@ -21,6 +21,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <errno.h>
+#include <termios.h>
 
 // Sources:
 //      * Intel 8080 Programmers Manual
@@ -257,6 +258,7 @@ static void debug_print_instruction(void) {
 
 static void mem_write(uint8_t LOW, uint8_t HIGH, uint8_t VAL);
 static uint8_t mem_read(uint8_t LOW, uint8_t HIGH);
+static int kbhit();
 
 static uint16_t dma_address;
 static uint16_t drive_number;
@@ -307,11 +309,18 @@ static void bios_entry(int function) {
         // ^C et cetera... This is good enough for now.
 
     case 2:         // const
-        A = 0;      // no pending key, 0xff = pending
+        if (kbhit())
+            A = 0xff;
+        else
+            A = 0;      // no pending key, 0xff = pending
         break;
 
     case 3:         // conin
         A = getchar();
+        if (A == 24) {      // ^X to exit emulator
+            fclose(dsk0);
+            exit(0);
+        }
         break;
 
     case 4:         // conout
@@ -1234,6 +1243,23 @@ CALL:
 
 // -------------------------------------------------------------------------
 
+struct termios orig_termios;
+static char *CLEAR     = "c";
+static char *RESET     = "c";
+
+static void reset_terminal_mode(void) {
+    tcsetattr(0, TCSANOW, &orig_termios);
+//    fputs(RESET, stdout);
+}
+
+static int kbhit() {
+    struct timeval tv = { 0L, 0L };
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(0, &fds);
+    return select(1, &fds, NULL, NULL, &tv) > 0;
+}
+
 int main(int argc, char **argv) {
     int r;
 
@@ -1249,6 +1275,18 @@ int main(int argc, char **argv) {
         fprintf(stderr, "unable to open %s\n", argv[1]);
         return 1;
     }
+
+    struct termios new_termios;
+
+    tcgetattr(0, &orig_termios);
+    memcpy(&new_termios, &orig_termios, sizeof(new_termios));
+
+    atexit(reset_terminal_mode);
+    cfmakeraw(&new_termios);
+    tcsetattr(0, TCSANOW, &new_termios);
+
+//    fputs(CLEAR, stdout);
+//    fflush(stdout);
 
     memset(&zp, 0, sizeof(zp));
 
