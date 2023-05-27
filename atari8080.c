@@ -490,12 +490,6 @@ static uint8_t mem_read(uint8_t LOW, uint8_t HIGH) {
 
 // Or change this to a single combined table if I decide to go with a single
 // F register. Decisions, decisions, decisions.
-static void eval_zsp_flags(uint8_t VAL) {
-                              // ldx VAL or tax or whatever
-    ZF = zf_table[VAL];       // lda zf_table,x ! sta zflag
-    SF = sf_table[VAL];       // lda sf_table,x ! sta sflag
-    PF = pf_table[VAL];       // lda pf_table,x ! sta pflag
-}
 
 #define SET_CF(expr)    CF = (expr) ? CF_FLAG : 0;
 #define GET_CF()        (CF)
@@ -507,6 +501,12 @@ static void eval_zsp_flags(uint8_t VAL) {
 #define GET_SF()        (SF)
 #define SET_PF(expr)    PF = (expr) ? PF_FLAG : 0;
 #define GET_PF()        (PF)
+
+static void eval_zsp_flags(uint8_t VAL) {
+    SET_ZF(zf_table[VAL]);
+    SET_SF(sf_table[VAL]);
+    SET_PF(pf_table[VAL]);
+}
 
 // -------------------------------------------------------------------------
 
