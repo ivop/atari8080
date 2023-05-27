@@ -497,6 +497,17 @@ static void eval_zsp_flags(uint8_t VAL) {
     PF = pf_table[VAL];       // lda pf_table,x ! sta pflag
 }
 
+#define SET_CF(expr)    CF = (expr) ? CF_FLAG : 0;
+#define GET_CF()        (CF)
+#define SET_AF(expr)    AF = (expr) ? AF_FLAG : 0;
+#define GET_AF()        (AF)
+#define SET_ZF(expr)    ZF = (expr) ? ZF_FLAG : 0;
+#define GET_ZF()        (ZF)
+#define SET_SF(expr)    SF = (expr) ? SF_FLAG : 0;
+#define GET_SF()        (SF)
+#define SET_PF(expr)    PF = (expr) ? PF_FLAG : 0;
+#define GET_PF()        (PF)
+
 // -------------------------------------------------------------------------
 
 static void run_emulator(void) {
@@ -508,7 +519,7 @@ static void run_emulator(void) {
     uint8_t t8, M;
     int16_t t16;
     int32_t t32;
-    uint16_t u16, BC, DE, HL, SP;  // note that this are temporaries and do
+    uint16_t u16, HL;              // note that this are temporaries and do
                                    // not directly reflect the state of the
                                    // registers! only used by DAD
 
@@ -561,7 +572,7 @@ static void run_emulator(void) {
         // ######################### INR #########################
         // INR reg = reg + 1                [Z,S,P,AC]
 
-#define INR(reg) reg+=1; AF = (reg&0x0f)==0 ? AF_FLAG:0; eval_zsp_flags(reg);
+#define INR(reg) reg+=1; SET_AF( (reg&0x0f)==0 ); eval_zsp_flags(reg);
 
         case 0x04: INR(B); break;
         case 0x0c: INR(C); break;
@@ -575,7 +586,7 @@ static void run_emulator(void) {
         // ######################### DCR #########################
         // DCR reg = reg - 1                [Z,S,P,AC]
 
-#define DCR(reg) reg-=1; AF = (reg&0x0f)==0x0f ? 0:AF_FLAG; eval_zsp_flags(reg);
+#define DCR(reg) reg-=1; SET_AF( !((reg&0x0f)==0x0f) ); eval_zsp_flags(reg);
 
         case 0x05: DCR(B); break;
         case 0x0d: DCR(C); break;
@@ -607,7 +618,7 @@ static void run_emulator(void) {
             t32 = HL + u16; \
             H = t32 >> 8; \
             L = t32 & 0xff; \
-            CF = (t32 & 0x00010000) ? CF_FLAG : 0;
+            SET_CF(t32 & 0x00010000);
 
         case 0x09: DAD(B,C); break;
         case 0x19: DAD(D,E); break;
@@ -645,19 +656,19 @@ static void run_emulator(void) {
             t8 = A & 1;
             A >>= 1;
             A |= t8 ? 0x80 : 0;
-            CF = t8 ? CF_FLAG : 0;
+            SET_CF(t8);
             break;
         case 0x1f: // RAR ---- A = A >> 1;bit 7 = prev CY;CY = prev bit 0 [CY]
             t8 = !!(A & 0x01);
             A >>= 1;
             A |= CF ? 0x80 : 0;     // bit7 prev CF
-            CF = t8 ? CF_FLAG : 0;
+            SET_CF(t8);
             break;
         case 0x2f: // CMA ---- A <- !A
             A = ~A;
             break;
         case 0x3f: // CMC ---- CY=!CY [CY]
-            CF = CF ^ CF_FLAG;
+            SET_CF(!CF);
             break;
 
         // ######################### MOV #########################
@@ -748,8 +759,8 @@ static void run_emulator(void) {
 
 #define ADD(val, car) \
             z = A + (val) + (car); \
-            CF = (((z ^ A ^ (val)) & 0x0100)) ? CF_FLAG : 0; \
-            AF = (((z ^ A ^ (val)) & 0x0010)) ? AF_FLAG : 0; \
+            SET_CF( ((z ^ A ^ (val)) & 0x0100) ); \
+            SET_AF( ((z ^ A ^ (val)) & 0x0010) ); \
             A = z; \
             eval_zsp_flags(A);
 
@@ -765,19 +776,19 @@ static void run_emulator(void) {
         // ######################### ADC #########################
         // A = A + val + carry              [Z,S,P,CY,AC]
 
-        case 0x88: ADD(B, !!CF); break;
-        case 0x89: ADD(C, !!CF); break;
-        case 0x8a: ADD(D, !!CF); break;
-        case 0x8b: ADD(E, !!CF); break;
-        case 0x8c: ADD(H, !!CF); break;
-        case 0x8d: ADD(L, !!CF); break;
-        case 0x8e: M = mem_read(L, H); ADD(M, !!CF); break;
-        case 0x8f: ADD(A, !!CF); break;
+        case 0x88: ADD(B, !!GET_CF()); break;
+        case 0x89: ADD(C, !!GET_CF()); break;
+        case 0x8a: ADD(D, !!GET_CF()); break;
+        case 0x8b: ADD(E, !!GET_CF()); break;
+        case 0x8c: ADD(H, !!GET_CF()); break;
+        case 0x8d: ADD(L, !!GET_CF()); break;
+        case 0x8e: M = mem_read(L, H); ADD(M, !!GET_CF()); break;
+        case 0x8f: ADD(A, !!GET_CF()); break;
 
         // ######################### SUB #########################
         // A = A + ~val + !carry
 
-#define SUB(val, car) ADD(~val, !car); CF = CF ^ CF_FLAG;
+#define SUB(val, car) ADD(~val, !car); SET_CF(!CF);
 
         case 0x90: SUB(B, 0); break;
         case 0x91: SUB(C, 0); break;
@@ -791,21 +802,21 @@ static void run_emulator(void) {
         // ######################### SBB #########################
         // A = A + ~val + !carry
  
-        case 0x98: SUB(B, !!CF); break;
-        case 0x99: SUB(C, !!CF); break;
-        case 0x9a: SUB(D, !!CF); break;
-        case 0x9b: SUB(E, !!CF); break;
-        case 0x9c: SUB(H, !!CF); break;
-        case 0x9d: SUB(L, !!CF); break;
-        case 0x9e: M = mem_read(L, H); SUB(M, !!CF); break;
-        case 0x9f: SUB(A, !!CF); break;
+        case 0x98: SUB(B, !!GET_CF()); break;
+        case 0x99: SUB(C, !!GET_CF()); break;
+        case 0x9a: SUB(D, !!GET_CF()); break;
+        case 0x9b: SUB(E, !!GET_CF()); break;
+        case 0x9c: SUB(H, !!GET_CF()); break;
+        case 0x9d: SUB(L, !!GET_CF()); break;
+        case 0x9e: M = mem_read(L, H); SUB(M, !!GET_CF()); break;
+        case 0x9f: SUB(A, !!GET_CF()); break;
 
         // ######################### ANA #########################
         // A = A & val                      [Z,S,P,CY,AC]
 
 #define ANA(val) t8 = A & val; \
-                 CF = 0; \
-                 AF = (((A | val) & 0x08) != 0) ? AF_FLAG : 0; \
+                 SET_CF(0); \
+                 SET_AF( ((A | val) & 0x08) != 0 ); \
                  A = t8; \
                  eval_zsp_flags(A);
 
@@ -821,7 +832,7 @@ static void run_emulator(void) {
         // ######################### XRA #########################
         // A = A ^ val                      [Z,S,P,CY,AC]
 
-#define XRA(val) A = A^val; AF=0; CF=0; eval_zsp_flags(A);
+#define XRA(val) A = A^val; SET_AF(0); SET_CF(0); eval_zsp_flags(A);
 
         case 0xa8: XRA(B); break;
         case 0xa9: XRA(C); break;
@@ -835,7 +846,7 @@ static void run_emulator(void) {
         // ######################### ORA #########################
         // A = A | val                      [Z,S,P,CY,AC]
 
-#define ORA(val) A = A|val; AF=0; CF=0; eval_zsp_flags(A);
+#define ORA(val) A = A|val; SET_AF(0); SET_CF(0); eval_zsp_flags(A);
 
         case 0xb0: ORA(B); break;
         case 0xb1: ORA(C); break;
@@ -850,8 +861,8 @@ static void run_emulator(void) {
         // CMP                              [Z,S,P,CY,AC]
 
 #define CMP(val) z = A - val; \
-                 CF = (z>>8) ? CF_FLAG : 0; \
-                 AF = (~(A ^ z ^ val)) & 0x10 ? AF_FLAG : 0; \
+                 SET_CF(z>>8); \
+                 SET_AF( (~(A ^ z ^ val)) & 0x10 ); \
                  eval_zsp_flags(z&0xff);
 
         case 0xb8: CMP(B); break;
@@ -869,29 +880,29 @@ static void run_emulator(void) {
             t8 = !!(A & 0x80);
             A <<= 1;                 // rol A ! adc#1 ! bcc/bcs for cflag
             A |= t8;                 // bit0 prev bit7
-            CF = t8 ? CF_FLAG : 0;
+            SET_CF(t8);
             break;
         case 0x17: // RAL ---- A = A << 1;bit 0 = prev CY;CY = prev bit 7 [CY]
             t8 = !!(A & 0x80);
             A <<= 1;
             A |= !!CF;               // bit0 prev CF
-            CF = t8 ? CF_FLAG : 0;
+            SET_CF(t8);
             break;
 
         case 0x27: // DAA ---- Decimal Adjust Accumulator [Z,S,P,CY,AC]
-            uint8_t save_CF = CF;
+            uint8_t save_CF = GET_CF();
             t8 = 0;
-            if (((A & 0x0f) > 9) || AF)
+            if (((A & 0x0f) > 9) || GET_AF())
                 t8 += 0x06;
-            if (((A & 0xf0) > 0x90) || CF || ((A&0xf0)>=0x90 && (A&0x0f)>9)) {
+            if (((A & 0xf0) > 0x90) || GET_CF() || ((A&0xf0)>=0x90 && (A&0x0f)>9)) {
                 t8 += 0x60;
                 save_CF = CF_FLAG;
             }
             ADD(t8,0);
-            CF = save_CF;
+            SET_CF(save_CF);
             break;
         case 0x37: // STC ---- CY	CY = 1
-            CF = CF_FLAG;
+            SET_CF(CF_FLAG);
             break;
 
         // ######################### POP/PUSH #########################
@@ -909,11 +920,11 @@ static void run_emulator(void) {
         case 0xd1: POP(D,E); break;
         case 0xe1: POP(H,L); break;
         case 0xf1: POP(A,t8);
-            ZF = t8 & ZF_FLAG;
-            SF = t8 & SF_FLAG;
-            PF = t8 & PF_FLAG;
-            AF = t8 & AF_FLAG;
-            CF = t8 & CF_FLAG;
+            SET_ZF(t8 & ZF_FLAG);
+            SET_SF(t8 & SF_FLAG);
+            SET_PF(t8 & PF_FLAG);
+            SET_AF(t8 & AF_FLAG);
+            SET_CF(t8 & CF_FLAG);
             break;
 
         // PUSH XY      (SP-2) <- Y; (SP-1) <- X; SP <- SP-2
@@ -932,14 +943,14 @@ static void run_emulator(void) {
 
         // ######################### RETCETERA #########################
         //
-        case 0xc0: if (!ZF) goto RET; break;
-        case 0xc8: if ( ZF) goto RET; break;
-        case 0xd0: if (!CF) goto RET; break;
-        case 0xd8: if ( CF) goto RET; break;
-        case 0xe0: if (!PF) goto RET; break;
-        case 0xe8: if ( PF) goto RET; break;
-        case 0xf0: if (!SF) goto RET; break;
-        case 0xf8: if ( SF) goto RET; break;
+        case 0xc0: if (!GET_ZF()) goto RET; break;
+        case 0xc8: if ( GET_ZF()) goto RET; break;
+        case 0xd0: if (!GET_CF()) goto RET; break;
+        case 0xd8: if ( GET_CF()) goto RET; break;
+        case 0xe0: if (!GET_PF()) goto RET; break;
+        case 0xe8: if ( GET_PF()) goto RET; break;
+        case 0xf0: if (!GET_SF()) goto RET; break;
+        case 0xf8: if ( GET_SF()) goto RET; break;
         case 0xc9: // RET ---- PC.lo <- (SP);PC.hi <- (SP+1);SP <- SP+2
 RET:
             POP(PCH,PCL);
@@ -949,14 +960,14 @@ RET:
 
         // ######################### JMP #########################
         //
-        case 0xc2: if (!ZF) goto JMP; break;
-        case 0xca: if ( ZF) goto JMP; break;
-        case 0xd2: if (!CF) goto JMP; break;
-        case 0xda: if ( CF) goto JMP; break;
-        case 0xe2: if (!PF) goto JMP; break;
-        case 0xea: if ( PF) goto JMP; break;
-        case 0xf2: if (!SF) goto JMP; break;
-        case 0xfa: if ( SF) goto JMP; break;
+        case 0xc2: if (!GET_ZF()) goto JMP; break;
+        case 0xca: if ( GET_ZF()) goto JMP; break;
+        case 0xd2: if (!GET_CF()) goto JMP; break;
+        case 0xda: if ( GET_CF()) goto JMP; break;
+        case 0xe2: if (!GET_PF()) goto JMP; break;
+        case 0xea: if ( GET_PF()) goto JMP; break;
+        case 0xf2: if (!GET_SF()) goto JMP; break;
+        case 0xfa: if ( GET_SF()) goto JMP; break;
         case 0xc3:
 JMP:
             PCL = byte2;
@@ -967,14 +978,14 @@ JMP:
 
         // ######################### CALL/RST #########################
         //
-        case 0xc4: if (!ZF) goto CALL; break;
-        case 0xcc: if ( ZF) goto CALL; break;
-        case 0xd4: if (!CF) goto CALL; break;
-        case 0xdc: if ( CF) goto CALL; break;
-        case 0xe4: if (!PF) goto CALL; break;
-        case 0xec: if ( PF) goto CALL; break;
-        case 0xf4: if (!SF) goto CALL; break;
-        case 0xfc: if ( SF) goto CALL; break;
+        case 0xc4: if (!GET_ZF()) goto CALL; break;
+        case 0xcc: if ( GET_ZF()) goto CALL; break;
+        case 0xd4: if (!GET_CF()) goto CALL; break;
+        case 0xdc: if ( GET_CF()) goto CALL; break;
+        case 0xe4: if (!GET_PF()) goto CALL; break;
+        case 0xec: if ( GET_PF()) goto CALL; break;
+        case 0xf4: if (!GET_SF()) goto CALL; break;
+        case 0xfc: if ( GET_SF()) goto CALL; break;
         case 0xcd:
 CALL:       
             PUSH(PCH,PCL);
@@ -996,9 +1007,9 @@ CALL:
         // ######################### IMMEDIATE #########################
         // xxx(byte2)
         case 0xc6: ADD(byte2, 0); break;    // ADI
-        case 0xce: ADD(byte2, !!CF); break; // ACI
+        case 0xce: ADD(byte2, !!GET_CF()); break; // ACI
         case 0xd6: SUB(byte2, 0); break;    // SUI
-        case 0xde: SUB(byte2, !!CF); break; // SBI
+        case 0xde: SUB(byte2, !!GET_CF()); break; // SBI
         case 0xe6: ANA(byte2); break;   // ANI
         case 0xee: XRA(byte2); break;   // XRI
         case 0xf6: ORA(byte2); break;   // ORI
