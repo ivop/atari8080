@@ -390,28 +390,6 @@ int main(int argc, char **argv) {
     }
     printf("};\n\n");
 
-#if 0
-    printf("static const uint8_t flags_affected[256] = {\n");
-    for (int i=0; i<16; i++) {
-        printf("\t");
-        for (int j=0; j<16; j++) {
-            int x = DO_NONE;
-            char *p = strchr(distab8080[i*16+j].descr, '[');
-            if (p) {
-                if (!strncmp(p, STR_ZSPAC, strlen(STR_ZSPAC)))
-                    x = DO_ZSPAC;
-                else if (!strncmp(p, STR_ZSPCYAC, strlen(STR_ZSPCYAC)))
-                    x = DO_ZSPCYAC;
-                else if (!strncmp(p, STR_CY, strlen(STR_CY)))
-                    x = DO_CY;
-            }
-            printf("%1d, ", x);
-        }
-        printf("\n");
-    }
-    printf("};\n\n");
-#endif
-
     printf("\
 enum addressing_mode {\n\
     MODE_IMPL = 0,\n\
@@ -445,22 +423,7 @@ enum addressing_mode {\n\
     }
     printf("};\n\n");
 
-#if 0
-    for (int i=0; i<256; i++) {
-        printf("        case %02x: // %s ", i, distab8080[i].inst);
-        int mode = distab8080[i].mode;
-        if (mode == MODE_D8)
-            printf("d8 ");
-        else if (mode == MODE_D16)
-            printf("d16 ");
-        else if (mode == MODE_ADR || mode == MODE_JMP)
-            printf("adr ");
-        printf("---- %s\n            break;\n", distab8080[i].descr);
-    }
-#endif
-
-    static uint8_t pf[256];
-    printf("static const uint8_t pf_table[256] = {\n");
+    printf("static const uint8_t zsp_table[256] = {\n");
     for (int i=0; i<16; i++) {
         printf("\t");
         for (int j=0; j<16; j++) {
@@ -471,48 +434,9 @@ enum addressing_mode {\n\
                 p^=y&1;
                 y>>=1;
             }
-            pf[x]=p*PF_FLAG;
-            printf("0x%02x, ", pf[x]);
+            printf("0x%02x, ", p*PF_FLAG | (x>=0x80)*SF_FLAG | (x==0)*ZF_FLAG);
         }
         printf("\n");
     }
     printf("};\n\n");
-
-    static uint8_t zf[256];
-    printf("static const uint8_t zf_table[256] = {\n");
-    for (int i=0; i<16; i++) {
-        printf("\t");
-        for (int j=0; j<16; j++) {
-            int x=i*16+j;
-            zf[x]=(x==0)*ZF_FLAG;
-            printf("0x%02x, ", zf[x]);
-        }
-        printf("\n");
-    }
-    printf("};\n\n");
-
-    static uint8_t sf[256];
-    printf("static const uint8_t sf_table[256] = {\n");
-    for (int i=0; i<32; i++) {
-        printf("\t");
-        for (int j=0; j<8; j++) {
-            int x=i*8+j;
-            sf[x]=(x>=0x80)*SF_FLAG;
-            printf("0x%02x, ", sf[x]);
-        }
-        printf("\n");
-    }
-    printf("};\n\n");
-
-    printf("static const uint8_t zsp_table[256] = {\n");
-    for (int i=0; i<16; i++) {
-        printf("\t");
-        for (int j=0; j<16; j++) {
-            int x=i*16+j;
-            printf("0x%02x, ", zf[x] | sf[x] | pf[x]);
-        }
-        printf("\n");
-    }
-    printf("};\n\n");
-
 }
