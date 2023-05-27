@@ -527,23 +527,14 @@ static void run_emulator(void) {
             break;
 
         // ######################### LXI #########################
-        //
-        case 0x01: // LXI B, d16 ---- B <- byte 3; C <- byte 2
-            B = byte3;
-            C = byte2;
-            break;
-        case 0x11: // LXI D, d16 ---- D <- byte 3; E <- byte 2
-            D = byte3;
-            E = byte2;
-            break;
-        case 0x21: // LXI H, d16 ---- H <- byte 3; L <- byte 2
-            H = byte3;
-            L = byte2;
-            break;
-        case 0x31: // LXI SP, d16 ---- SP.hi <- byte 3;SP.lo <- byte 2
-            SPH = byte3;
-            SPL = byte2;
-            break;
+        // LXI XY       X <- byte3; Y <- byte2
+
+#define LXI(X,Y) X = byte3; Y = byte2;
+
+        case 0x01: LXI(B,C); break;
+        case 0x11: LXI(D,E); break;
+        case 0x21: LXI(H,L); break;
+        case 0x31: LXI(SPH,SPL); break;
 
         // ######################### STORE #########################
         //
@@ -564,23 +555,14 @@ static void run_emulator(void) {
             break;
 
         // ######################### INX #########################
-        //
-        case 0x03: // INX B ---- BC <- BC+1
-            C++;
-            if (C == 0) B++;
-            break;
-        case 0x13: // INX D ---- DE <- DE + 1
-            E++;
-            if (E == 0) D++;
-            break;
-        case 0x23: // INX H ---- HL <- HL + 1
-            L++;
-            if (L == 0) H++;
-            break;
-        case 0x33: // INX SP ---- SP = SP + 1
-            SPL++;
-            if (SPL == 0) SPH++;
-            break;
+        // INX XY       XY <- XY+1
+
+#define INX(X,Y) Y++; if (Y == 0) X++;
+
+        case 0x03: INX(B,C); break;
+        case 0x13: INX(D,E); break;
+        case 0x23: INX(H,L); break;
+        case 0x33: INX(SPH,SPL); break;
 
         // ######################### INR #########################
         // INR reg = reg + 1                [Z,S,P,AC]
