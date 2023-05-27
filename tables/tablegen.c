@@ -368,6 +368,7 @@ enum {
 #define ZF_FLAG     0b01000000
 #define AF_FLAG     0b00010000
 #define PF_FLAG     0b00000100
+#define ONE_FLAG    0b00000010      // always set!
 #define CF_FLAG     0b00000001
 
 int main(int argc, char **argv) {
@@ -471,7 +472,7 @@ enum addressing_mode {\n\
                 y>>=1;
             }
             pf[x]=p*PF_FLAG;
-            printf("%02x, ", pf[x]);
+            printf("0x%02x, ", pf[x]);
         }
         printf("\n");
     }
@@ -484,7 +485,7 @@ enum addressing_mode {\n\
         for (int j=0; j<16; j++) {
             int x=i*16+j;
             zf[x]=(x==0)*ZF_FLAG;
-            printf("%02x, ", zf[x]);
+            printf("0x%02x, ", zf[x]);
         }
         printf("\n");
     }
@@ -497,7 +498,7 @@ enum addressing_mode {\n\
         for (int j=0; j<8; j++) {
             int x=i*8+j;
             sf[x]=(x>=0x80)*SF_FLAG;
-            printf("%02x, ", sf[x]);
+            printf("0x%02x, ", sf[x]);
         }
         printf("\n");
     }
@@ -508,7 +509,7 @@ enum addressing_mode {\n\
         printf("\t");
         for (int j=0; j<16; j++) {
             int x=i*16+j;
-            printf("%02x, ", zf[x] | sf[x] | pf[x]);
+            printf("0x%02x, ", zf[x] | sf[x] | pf[x]);
         }
         printf("\n");
     }

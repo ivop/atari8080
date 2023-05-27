@@ -109,14 +109,14 @@ struct __attribute__((packed, aligned(1))) zp {
 //
 // |S|Z|0|A|0|P|1|C|
 
-static uint8_t F = 0x02;
-
 #define SF_FLAG     0b10000000
 #define ZF_FLAG     0b01000000
 #define AF_FLAG     0b00010000
 #define PF_FLAG     0b00000100
 #define ONE_FLAG    0b00000010      // always set!
 #define CF_FLAG     0b00000001
+
+static uint8_t F = ONE_FLAG;
 
 #define ALL_FLAGS   (SF_FLAG | ZF_FLAG | AF_FLAG | PF_FLAG | ONE_FLAG | CF_FLAG)
 
@@ -518,11 +518,8 @@ static uint8_t mem_read(uint8_t LOW, uint8_t HIGH) {
 #endif
 
 static void eval_zsp_flags(uint8_t VAL) {
-    SET_ZF(zf_table[VAL]);
-    SET_SF(sf_table[VAL]);
-    SET_PF(pf_table[VAL]);
-//    F &= ~zsp_table[VAL];
-//    F |=  zsp_table[VAL];
+    F &= ~(ZF_FLAG | SF_FLAG | PF_FLAG);
+    F |=  zsp_table[VAL];
 }
 
 // -------------------------------------------------------------------------
