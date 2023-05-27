@@ -468,16 +468,16 @@ static void mem_write(uint8_t LOW, uint8_t HIGH, uint8_t VAL) {
     if (adr >= BDOS && pc >= CPMB && pc < BDOS) {
         fprintf(stderr, "CPP writes to BDOS area %04X from PC:%04X\n",adr,  pc);
     }
-    if (adr >= BDOS && pc >= CPMB && pc > BDOS) {
-        fprintf(stderr, "BDOS writes to BDOS area %04X from PC:%04X\n",adr,  pc);
-    }
+//    if (adr >= BDOS && pc >= CPMB && pc > BDOS) {
+//        fprintf(stderr, "BDOS writes to BDOS area %04X from PC:%04X\n",adr,  pc);
+//    }
 #endif
 
     uint8_t savebank = curbank;
                                     // atari: here is where we adjust B, D, H
     curbank = HIGH>>6;              // table lookup
     HIGH &= 0x3f;
-    
+
     uint16_t ADR = (HIGH<<8) | LOW;
 
     mem[curbank][ADR] = VAL;        // sta (adr),y

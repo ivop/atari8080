@@ -19,7 +19,7 @@ ccp.h: ccp.sys
 	xxd -i ccp.sys > ccp.h
 
 ccp.sys: ccp.asm
-	asl -D origin=0e400h -o ccp.p ccp.asm
+	asl -D origin=0e400h -D noserial=1 -o ccp.p ccp.asm
 	p2bin -k -l '$$00' -r '$$e400-$$ebff' ccp.p ccp.sys
 
 clean:
