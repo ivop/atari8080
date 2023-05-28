@@ -133,8 +133,8 @@ static uint8_t instruction, byte2, byte3;
 //
 // Standard CP/M Memory layout:
 //
-// $E400 = CCP
-// $EC00 = BDOS    (entry at $EC06)
+// $E400 = CCP      (important: disable serialization!)
+// $EC00 = BDOS     (entry at $EC06)
 // $FA00 = BIOS
 //
 // Trap BIOS calls with an unused 8080 instruction and use C functions
