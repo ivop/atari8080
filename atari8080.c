@@ -652,7 +652,7 @@ static void run_emulator(void) {
             SET_CF(t8);
             break;
         case 0x1f: // RAR ---- A = A >> 1;bit 7 = prev CY;CY = prev bit 0 [CY]
-            t8 = !!(A & 0x01);
+            t8 = A & 0x01;
             A >>= 1;
             A |= GET_CF() ? 0x80 : 0;     // bit7 prev CF
             SET_CF(t8);
@@ -769,14 +769,16 @@ static void run_emulator(void) {
         // ######################### ADC #########################
         // A = A + val + carry              [Z,S,P,CY,AC]
 
-        case 0x88: ADD(B, !!GET_CF()); break;
-        case 0x89: ADD(C, !!GET_CF()); break;
-        case 0x8a: ADD(D, !!GET_CF()); break;
-        case 0x8b: ADD(E, !!GET_CF()); break;
-        case 0x8c: ADD(H, !!GET_CF()); break;
-        case 0x8d: ADD(L, !!GET_CF()); break;
-        case 0x8e: M = mem_read(L, H); ADD(M, !!GET_CF()); break;
-        case 0x8f: ADD(A, !!GET_CF()); break;
+        // note: carry flag is bit 0, so GET_CF is 0 or 1, same for SBB
+
+        case 0x88: ADD(B, GET_CF()); break;
+        case 0x89: ADD(C, GET_CF()); break;
+        case 0x8a: ADD(D, GET_CF()); break;
+        case 0x8b: ADD(E, GET_CF()); break;
+        case 0x8c: ADD(H, GET_CF()); break;
+        case 0x8d: ADD(L, GET_CF()); break;
+        case 0x8e: M = mem_read(L, H); ADD(M, GET_CF()); break;
+        case 0x8f: ADD(A, GET_CF()); break;
 
         // ######################### SUB #########################
         // A = A + ~val + !carry
@@ -795,14 +797,14 @@ static void run_emulator(void) {
         // ######################### SBB #########################
         // A = A + ~val + !carry
  
-        case 0x98: SUB(B, !!GET_CF()); break;
-        case 0x99: SUB(C, !!GET_CF()); break;
-        case 0x9a: SUB(D, !!GET_CF()); break;
-        case 0x9b: SUB(E, !!GET_CF()); break;
-        case 0x9c: SUB(H, !!GET_CF()); break;
-        case 0x9d: SUB(L, !!GET_CF()); break;
-        case 0x9e: M = mem_read(L, H); SUB(M, !!GET_CF()); break;
-        case 0x9f: SUB(A, !!GET_CF()); break;
+        case 0x98: SUB(B, GET_CF()); break;
+        case 0x99: SUB(C, GET_CF()); break;
+        case 0x9a: SUB(D, GET_CF()); break;
+        case 0x9b: SUB(E, GET_CF()); break;
+        case 0x9c: SUB(H, GET_CF()); break;
+        case 0x9d: SUB(L, GET_CF()); break;
+        case 0x9e: M = mem_read(L, H); SUB(M, GET_CF()); break;
+        case 0x9f: SUB(A, GET_CF()); break;
 
         // ######################### ANA #########################
         // A = A & val                      [Z,S,P,CY,AC]
@@ -870,15 +872,15 @@ static void run_emulator(void) {
         // ######################### RLC/RAL/DAA/STC #########################
         //
         case 0x07: // RLC ---- A = A << 1;bit 0 = prev bit 7;CY = prev bit 7 [CY]
-            t8 = !!(A & 0x80);
+            t8 = !!(A & 0x80);       // we need 0/1
             A <<= 1;                 // rol A ! adc#1 ! bcc/bcs for cflag
             A |= t8;                 // bit0 prev bit7
             SET_CF(t8);
             break;
         case 0x17: // RAL ---- A = A << 1;bit 0 = prev CY;CY = prev bit 7 [CY]
-            t8 = !!(A & 0x80);
+            t8 = A & 0x80; 
             A <<= 1;
-            A |= !!GET_CF();               // bit0 prev CF
+            A |= GET_CF();               // bit0 prev CF (CF is bit0 of F)
             SET_CF(t8);
             break;
 
@@ -997,9 +999,9 @@ CALL:
         // ######################### IMMEDIATE #########################
         // xxx(byte2)
         case 0xc6: ADD(byte2, 0); break;    // ADI
-        case 0xce: ADD(byte2, !!GET_CF()); break; // ACI
+        case 0xce: ADD(byte2, GET_CF()); break; // ACI
         case 0xd6: SUB(byte2, 0); break;    // SUI
-        case 0xde: SUB(byte2, !!GET_CF()); break; // SBI
+        case 0xde: SUB(byte2, GET_CF()); break; // SBI
         case 0xe6: ANA(byte2); break;   // ANI
         case 0xee: XRA(byte2); break;   // XRI
         case 0xf6: ORA(byte2); break;   // ORI
