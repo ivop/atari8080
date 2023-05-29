@@ -368,7 +368,7 @@ opcode_33:
     jmp run_emulator
 
     ; ######################### INR #########################
-    ; INR reg = reg + 1                 [Z,S,P,AC]
+    ; INR reg  reg=reg+1                 [Z,S,P,AC]
 
     .macro INR REG
         inc :REG
@@ -418,11 +418,58 @@ opcode_3c:
     INR regA
     jmp run_emulator
 
-    ; ------------------------ unimplemented ------------------
+    ; ######################### DCR #########################
+    ; DCR reg   reg=reg-1               [Z,S,P,AC]
+
+    .macro DCR REG
+        dec :REG
+        ldx :REG
+
+        lda regF
+        and #~(ZF_FLAG|SF_FLAG|PF_FLAG|AF_FLAG)
+        ora dcr_af_table,x          ; !((reg&0x0f)==0x0f)
+        ora zsp_table,x
+        sta regF
+    .endm
 
 opcode_05:
-    KIL
+    DCR regB
     jmp run_emulator
+
+opcode_0d:
+    DCR regC
+    jmp run_emulator
+
+opcode_15:
+    DCR regD
+    jmp run_emulator
+
+opcode_1d:
+    DCR regE
+    jmp run_emulator
+
+opcode_25:
+    DCR regH
+    jmp run_emulator
+
+opcode_2d:
+    DCR regL
+    jmp run_emulator
+
+opcode_35:  ; DCR M
+    mem_read_no_curbank_restore regL, regH, regM
+    DCR regM        ; execute instruction and set flags
+    txa             ; still in X
+    sta (regL),y    ; mem_read has setup the adjusted register and bank
+    lda curbank
+    sta PORTB
+    jmp run_emulator
+
+opcode_3d:
+    DCR regA
+    jmp run_emulator
+
+    ; ------------------------ unimplemented ------------------
 
 opcode_06:
     KIL
@@ -448,10 +495,6 @@ opcode_0b:
     KIL
     jmp run_emulator
 
-opcode_0d:
-    KIL
-    jmp run_emulator
-
 opcode_0e:
     KIL
     jmp run_emulator
@@ -461,10 +504,6 @@ opcode_0f:
     jmp run_emulator
 
 opcode_10:
-    KIL
-    jmp run_emulator
-
-opcode_15:
     KIL
     jmp run_emulator
 
@@ -492,10 +531,6 @@ opcode_1b:
     KIL
     jmp run_emulator
 
-opcode_1d:
-    KIL
-    jmp run_emulator
-
 opcode_1e:
     KIL
     jmp run_emulator
@@ -505,10 +540,6 @@ opcode_1f:
     jmp run_emulator
 
 opcode_20:
-    KIL
-    jmp run_emulator
-
-opcode_25:
     KIL
     jmp run_emulator
 
@@ -536,10 +567,6 @@ opcode_2b:
     KIL
     jmp run_emulator
 
-opcode_2d:
-    KIL
-    jmp run_emulator
-
 opcode_2e:
     KIL
     jmp run_emulator
@@ -549,10 +576,6 @@ opcode_2f:
     jmp run_emulator
 
 opcode_30:
-    KIL
-    jmp run_emulator
-
-opcode_35:
     KIL
     jmp run_emulator
 
@@ -577,10 +600,6 @@ opcode_3a:
     jmp run_emulator
 
 opcode_3b:
-    KIL
-    jmp run_emulator
-
-opcode_3d:
     KIL
     jmp run_emulator
 

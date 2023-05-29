@@ -420,4 +420,16 @@ int main(int argc, char **argv) {
         printf("\n");
     }
     printf("\n");
+
+    printf("dcr_af_table:\n");
+    for (int i=0; i<32; i++) {
+        printf("\tdta ");
+        for (int j=0; j<8; j++) {
+            int x=i*8+j;
+            printf("$%02x", (!((x&0x0f)==0x0f))*AF_FLAG);
+            if (j<7) printf(", ");
+        }
+        printf("\n");
+    }
+    printf("\n");
 }
