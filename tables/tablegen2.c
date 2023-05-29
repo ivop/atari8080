@@ -432,4 +432,29 @@ int main(int argc, char **argv) {
         printf("\n");
     }
     printf("\n");
+
+    printf("daa_table_cond1:\n");
+    for (int i=0; i<16; i++) {
+        printf("\tdta ");
+        for (int j=0; j<16; j++) {
+            int y=i*16+j;
+            printf("%d", ((y&0x0f)>9));
+            if (j<15) printf(", ");
+        }
+        printf("\n");
+    }
+    printf("\n");
+
+    printf("daa_table_cond2:\n");
+    for (int i=0; i<16; i++) {
+        printf("\tdta ");
+        for (int j=0; j<16; j++) {
+            int y=i*16+j;
+            printf("%d", ((y&0xf0)>0x90) || ((y&0xf0)>=0x90) && ((y&0x0f)>9));
+            if (j<15) printf(", ");
+        }
+        printf("\n");
+    }
+    printf("\n");
+
 }

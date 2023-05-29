@@ -76,6 +76,8 @@ byte2       = ZP+21
 byte3a      = ZP+22     ; for SHLD for example (adr)<-L;(adr+1)<-H
 
 regM    = ZP+23         ; temporary M register, optimize later
+t8      = ZP+24
+saveCF  = ZP+25
 
 SF_FLAG = %10000000
 ZF_FLAG = %01000000
@@ -1499,6 +1501,40 @@ opcode_17:  ; RAL ---- A = A << 1;bit 0 = prev CY;CY = prev bit 7 [CY]
     jmp run_emulator
 
 opcode_27:  ; DAA ---- Decimal Adjust Accumulator [Z,S,P,CY,AC]
+    lda regF
+    and #CF_FLAG
+    sta saveCF
+
+    ldx regA
+    lda #0
+    sta t8
+
+    lda regF
+    and #AF_FLAG
+    ora daa_table_cond1,x
+    beq @5
+
+    lda #$06
+    sta t8
+
+@5:
+    lda regF
+    and #CF_FLAG
+    ora daa_table_cond2,x
+    beq @6
+
+    lda t8
+    ora #$60
+    sta t8
+    lda #CF_FLAG
+    sta saveCF
+
+@6:
+    _ADD t8
+    lda regF
+    and #~CF_FLAG
+    ora saveCF
+    sta regF
     jmp run_emulator
 
 opcode_37:  ; STC ---- CY   CY = 1
