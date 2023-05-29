@@ -917,18 +917,18 @@ opcode_7f:
     ; A = A + val                      [Z,S,P,CY,AC]
 
     .macro _ADD val         ; add is reserved keyword
-        lda regA
         clc
+        lda regA
         adc :val
         tax                 ; save temporarily, and we need it as index
-        bcc @1+             ; use 6502 carry to set regF
+        bcc @1              ; use 6502 carry to set/clear CF
 
         lda regF
         ora #CF_FLAG
         sta regF
-        bne @2+
+        bne @2
 
- @1:
+@1:
         lda regF
         and #~CF_FLAG
         sta regF
@@ -938,12 +938,12 @@ opcode_7f:
         eor regA
         eor :val
         and #$10
-        beq @3+
+        beq @3
 
         lda regF
         ora #AF_FLAG
 ;        sta regF
-        bne @4+
+        bne @4
 
 @3:
         lda regF
@@ -958,70 +958,114 @@ opcode_7f:
     .endm
 
 opcode_80:
-    ADD regB
+    _ADD regB
     jmp run_emulator
 
 opcode_81:
-    ADD regC
+    _ADD regC
     jmp run_emulator
 
 opcode_82:
-    ADD regD
+    _ADD regD
     jmp run_emulator
 
 opcode_83:
-    ADD regE
+    _ADD regE
     jmp run_emulator
 
 opcode_84:
-    ADD regH
+    _ADD regH
     jmp run_emulator
 
 opcode_85:
-    ADD regL
+    _ADD regL
     jmp run_emulator
 
 opcode_86:
     mem_read regL,regH,regM
-    ADD regM
+    _ADD regM
     jmp run_emulator
 
 opcode_87:
-    ADD regA
+    _ADD regA
     jmp run_emulator
 
     ; ######################### ADC #########################
     ; A = A + val + carry              [Z,S,P,CY,AC]
+
+    .macro _ADC val         ; adc is reserved keyword
+        lda regF
+        lsr                 ; get carry from regF
+        lda regA
+        adc :val
+        tax                 ; save temporarily, and we need it as index
+        bcc @1              ; use 6502 to set/clear CF
+
+        lda regF
+        ora #CF_FLAG
+        sta regF
+        bne @2
+
+@1:
+        lda regF
+        and #~CF_FLAG
+        sta regF
+
+@2:
+        txa                 ; result z back in accu
+        eor regA
+        eor :val
+        and #$10
+        beq @3
+
+        lda regF
+        ora #AF_FLAG
+;        sta regF
+        bne @4
+
+@3:
+        lda regF
+        and #~AF_FLAG
+;        sta regF
+
+@4:
+        and #~(SF_FLAG|ZF_FLAG|PF_FLAG)
+        ora zsp_table,x
+        sta regF
+        stx regA
+    .endm
+
 opcode_88:
-    KIL
+    _ADC regB
     jmp run_emulator
 
 opcode_89:
-    KIL
+    _ADC regC
     jmp run_emulator
 
 opcode_8a:
-    KIL
+    _ADC regD
     jmp run_emulator
 
 opcode_8b:
-    KIL
+    _ADC regE
     jmp run_emulator
 
 opcode_8c:
-    KIL
+    _ADC regH
     jmp run_emulator
 
 opcode_8d:
-    KIL
+    _ADC regL
     jmp run_emulator
 
 opcode_8e:
-    KIL
+    mem_read regL,regH,regM
+    _ADC regM
     jmp run_emulator
 
 opcode_8f:
-    KIL
+    _ADC regA
     jmp run_emulator
 
     ; ######################### SUB #########################
