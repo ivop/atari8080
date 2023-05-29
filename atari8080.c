@@ -615,7 +615,7 @@ static void run_emulator(void) {
 
         case 0x09: DAD(B,C); break;
         case 0x19: DAD(D,E); break;
-        case 0x29: DAD(H,L); break;             // atari: remember HL+HL
+        case 0x29: DAD(H,L); break;
         case 0x39: DAD(SPH,SPL); break;
 
         // ######################### LOAD #########################
