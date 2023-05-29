@@ -1618,39 +1618,62 @@ opcode_f5:
     ; ######################### RETCETERA #########################
     ;
 opcode_c0:
-    KIL
+    lda regF
+    and #ZF_FLAG
+    beq RET
     jmp run_emulator
 
 opcode_c8:
-    KIL
+    lda regF
+    and #ZF_FLAG
+    bne RET
     jmp run_emulator
 
 opcode_d0:
-    KIL
+    lda regF
+    and #CF_FLAG
+    beq RET
     jmp run_emulator
 
 opcode_d8:
-    KIL
+    lda regF
+    and #CF_FLAG
+    bne RET
     jmp run_emulator
 
 opcode_e0:
-    KIL
+    lda regF
+    and #PF_FLAG
+    beq RET
     jmp run_emulator
 
 opcode_e8:
-    KIL
+    lda regF
+    and #PF_FLAG
+    bne RET
     jmp run_emulator
 
 opcode_f0:
-    KIL
+    lda regF
+    and #SF_FLAG
+    beq RET
     jmp run_emulator
 
 opcode_f8:
-    KIL
+    lda regF
+    and #SF_FLAG
+    bne RET
     jmp run_emulator
 
+RET:
 opcode_c9: ; RET
-    KIL
+    POP PCH,PCL
+    ldx PCH
+    lda msb_to_adjusted,x
+    sta PCHa
+    lda msb_to_bank,x
+    sta curbank
+    sta PORTB
     jmp run_emulator
 
     ; ######################### JMP #########################
