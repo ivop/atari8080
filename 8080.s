@@ -1679,39 +1679,64 @@ opcode_c9: ; RET
     ; ######################### JMP #########################
     ; 
 opcode_c2:
-    KIL
+    lda regF
+    and #ZF_FLAG
+    beq _JMP
     jmp run_emulator
 
 opcode_ca:
-    KIL
+    lda regF
+    and #ZF_FLAG
+    bne _JMP
     jmp run_emulator
 
 opcode_d2:
-    KIL
+    lda regF
+    and #CF_FLAG
+    beq _JMP
     jmp run_emulator
 
 opcode_da:
-    KIL
+    lda regF
+    and #CF_FLAG
+    bne _JMP
     jmp run_emulator
 
 opcode_e2:
-    KIL
+    lda regF
+    and #PF_FLAG
+    beq _JMP
     jmp run_emulator
 
 opcode_ea:
-    KIL
+    lda regF
+    and #PF_FLAG
+    bne _JMP
     jmp run_emulator
 
 opcode_f2:
-    KIL
+    lda regF
+    and #SF_FLAG
+    beq _JMP
     jmp run_emulator
 
 opcode_fa:
-    KIL
+    lda regF
+    and #SF_FLAG
+    bne _JMP
     jmp run_emulator
 
+_JMP:
 opcode_c3: ; JMP
-    KIL
+    lda byte2
+    sta PCL
+    ldx byte3               ; use X, saves one instruction
+    stx PCH
+    lda msb_to_adjusted,x
+    sta PCHa
+    lda msb_to_bank,x
+    sta curbank
+    sta PORTB
     jmp run_emulator
 
     ; ######################### CALL/RST #########################
