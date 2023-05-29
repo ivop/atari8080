@@ -591,7 +591,7 @@ static void run_emulator(void) {
         case 0x3d: DCR(A); break;
 
         // ######################### MVI #########################
-        //
+        // MVI reg      reg=byte2
 
         case 0x06: B = byte2; break;
         case 0x0e: C = byte2; break;
