@@ -407,7 +407,7 @@ opcode_2c:
 
 opcode_34: ; INR M
     mem_read_no_curbank_restore regL, regH, regM
-    INR regM
+    INR regM        ; execute instruction and set flags
     txa             ; still in X
     sta (regL),y    ; mem_read has setup the adjusted register and bank
     lda curbank
