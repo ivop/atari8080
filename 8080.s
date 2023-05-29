@@ -1291,70 +1291,95 @@ opcode_a7:
     ; ######################### XRA #########################
     ; A = A ^ val                      [Z,S,P,CY,AC]
 
+    .macro XRA val
+        lda regA
+        eor :val
+        sta regA
+        tax
+
+        lda #ON_FLAG
+        ora zsp_table,x
+        sta regF
+    .endm
+
 opcode_a8:
-    KIL
+    XRA regB
     jmp run_emulator
 
 opcode_a9:
-    KIL
+    XRA regC
     jmp run_emulator
 
 opcode_aa:
-    KIL
+    XRA regD
     jmp run_emulator
 
 opcode_ab:
-    KIL
+    XRA regE
     jmp run_emulator
 
 opcode_ac:
-    KIL
+    XRA regH
     jmp run_emulator
 
 opcode_ad:
-    KIL
+    XRA regL
     jmp run_emulator
 
 opcode_ae:
-    KIL
+    mem_read regL,regH,regM
+    XRA regM
     jmp run_emulator
 
 opcode_af:
-    KIL
+    XRA regA
     jmp run_emulator
  
     ; ######################### ORA #########################
     ; A = A | val                      [Z,S,P,CY,AC]
+
+    .macro _ORA val     ; ora is reserved keyword
+        lda regA
+        ora :val
+        sta regA
+        tax
+
+        lda #ON_FLAG
+        ora zsp_table,x
+        sta regF
+    .endm
+
 opcode_b0:
-    KIL
+    _ORA regB
     jmp run_emulator
 
 opcode_b1:
-    KIL
+    _ORA regC
     jmp run_emulator
 
 opcode_b2:
-    KIL
+    _ORA regD
     jmp run_emulator
 
 opcode_b3:
-    KIL
+    _ORA regE
     jmp run_emulator
 
 opcode_b4:
-    KIL
+    _ORA regH
     jmp run_emulator
 
 opcode_b5:
-    KIL
+    _ORA regL
     jmp run_emulator
 
 opcode_b6:
-    KIL
+    mem_read regL,regH,regM
+    _ORA regM
     jmp run_emulator
 
 opcode_b7:
-    KIL
+    _ORA regA
     jmp run_emulator
 
     ; ######################### CMP #########################
