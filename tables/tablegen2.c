@@ -384,7 +384,7 @@ int main(int argc, char **argv) {
             case MODE_JMP:  x=3; break;
             default:        x=1; break;
             }
-            printf("%1d", x);
+            printf("%1d", x-1);     // minus one is easier for branches
             if (j<15) printf(", ");
         }
         printf("\n");

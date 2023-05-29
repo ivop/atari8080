@@ -66,6 +66,10 @@ PCHa = ZP+16     ; keep PC always adjusted for fetch instruction!
 curbank  = ZP+17    ; direct PORTB values
 savebank = ZP+18
 
+instruction = ZP+19     ; do we need this?
+byte2       = ZP+20
+byte3       = ZP+21
+
 ; --------------------------------------------------------------------------
 
 ; We just assume we are on a 130XE for now. atari800 -xe 8080.xex
@@ -129,10 +133,71 @@ savebank = ZP+18
 
 ; MAIN EMULATION LOOP
 
+; Important:
+; BIT: The N and V flags are set to match bits 7 and 6 respectively in the
+; value stored at the tested address.
+
     org $8000
 
 run_emulator:
-    rts
+    ldy #0
+    lda (PCL),y                 ; retrieve instruction
+
+    tax                         ; set trampoline
+    lda jump_table_low,x
+    sta trampoline
+    lda jump_table_high,x
+    sta trampoline+1
+
+    lda instruction_length,x
+    beq length1
+    cmp #1
+    beq length2
+
+    .macro INCPC
+        inc PCL             ; most of the time this is just inc+bne
+        bne no_inc_pch
+            inc PCH         ; each page crossing it's four instructions
+            inc PCHa        ; longer
+            bit PCHa
+            bpl no_adjust   ; except for when we are at the end of the bank
+                ldx PCH
+                lda msb_to_bank,x
+                sta curbank
+                sta PORTB
+                lda msb_to_pcha,x
+                sta PCHa
+no_adjust:
+no_inc_pch:
+    .endm
+
+length3:
+    INCPC
+    lda (PCL),y
+    sta byte2
+
+    INCPC
+    lda (PCL),y
+    sta byte3
+
+    jmp length1
+
+length2:
+    INCPC
+    lda (PCL),y
+    sta byte2
+
+    ; fallthrough
+
+length1:
+    INCPC
+
+trampoline = *+1
+    jmp opcode_00   ; upon entering the opcode emulation, Y is always 0
+
+                    ; shortest path is 12 6502 instructions
+
+; --------------------------------------------------------------------------
 
 opcode_00:
     jmp run_emulator
@@ -924,8 +989,11 @@ run:
     sta PCL
     lda #$01
     sta PCH
+
+    tax
+    lda msb_to_pcha,x
     sta PCHa
-    lda #BANK0
+    lda msb_to_bank,x
     sta curbank
     sta PORTB
 
@@ -1086,10 +1154,16 @@ jump_table_high:
 ; --------------------------------------------------------------------------
 
 msb_to_bank:
-:64 .byte BANK0
-:64 .byte BANK1
-:64 .byte BANK2
-:64 .byte BANK3
+:64 dta BANK0
+:64 dta BANK1
+:64 dta BANK2
+:64 dta BANK3
+
+msb_to_pcha:
+:64 dta $40+#
+:64 dta $40+#
+:64 dta $40+#
+:64 dta $40+#
 
 ; include instruction_length and zsp_table tables
 
