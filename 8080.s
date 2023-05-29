@@ -602,11 +602,39 @@ opcode_3b:
     ; ######################### RRC/RAR/CMA/CMC #########################
     ;
 opcode_0f: ; RRC --- A = A >> 1;bit 7 = prev bit 0;CY = prev bit 0 [CY]
-    KIL
+    lda regA
+    lsr
+    bcc @+
+
+    ora #$80
+    sta regA
+    lda regF
+    ora #CF_FLAG
+    sta regF
+    jmp run_emulator
+
+@:
+    sta regA
+    lda regF
+    and #~CF_FLAG
+    sta regF
     jmp run_emulator
 
 opcode_1f: ; RAR ---- A = A >> 1;bit 7 = prev CY;CY = prev bit 0 [CY]
-    KIL
+    lda regF
+    lsr                 ; abuse fact that CF_FLAG=1, C=bit0 of regF
+    ror regA
+    bcc @+
+
+    lda regF
+    ora #CF_FLAG
+    sta regF
+    jmp run_emulator
+
+@:
+    lda regF
+    and #~CF_FLAG
+    sta regF
     jmp run_emulator
 
 opcode_2f: ; CMA ---- A <- !A
