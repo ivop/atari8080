@@ -280,6 +280,18 @@ opcode_31:
         sta PORTB
     .endm
 
+    ; Same, but does not restore curbank at the end. Use with caution!
+
+    .macro mem_write_no_curbank_restore LOW, HIGH, LOC     ; assume Y=0
+        ldx :HIGH
+        lda msb_to_adjusted,x
+        sta :HIGH+2
+        lda msb_to_bank,x
+        sta PORTB
+        lda :LOC
+        sta (:LOW),y
+    .endm
+
 opcode_02:  ; STAX B ---- (BC) <- A
     mem_write regC, regB, regA
     jmp run_emulator
@@ -289,11 +301,16 @@ opcode_12:  ; STAX D ---- (DE) <- A
     jmp run_emulator
 
 opcode_22:  ; SHLD adr ---- (adr) <-L;(adr+1) <- H
-    KIL
+    mem_write_no_curbank_restore byte2, byte3, regL
+    inc byte2
+    bne no_inc_byte3
+    inc byte3
+no_inc_byte3:
+    mem_write byte2, byte3, regH        ; here curbank/PORTB is restored
     jmp run_emulator
 
 opcode_32:  ; STA adr ---- (adr) <- A
-    KIL
+    mem_write byte2, byte3, regA
     jmp run_emulator
 
     ; ------------------------ unimplemented ------------------
