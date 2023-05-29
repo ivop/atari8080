@@ -637,7 +637,7 @@ static void run_emulator(void) {
             break;
 
         // ######################### DCX #########################
-        // DCX reg
+        // DCX XY       XY <- XY-1
         case 0x0b:   C--; if (  C == 0xff) B--; break;
         case 0x1b:   E--; if (  E == 0xff) D--; break;
         case 0x2b:   L--; if (  L == 0xff) H--; break;
@@ -781,7 +781,7 @@ static void run_emulator(void) {
         case 0x8f: ADD(A, GET_CF()); break;
 
         // ######################### SUB #########################
-        // A = A + ~val + !carry
+        // A = A + ~val + !carry            [Z,S,P,CY,AC]
 
 #define SUB(val, car) ADD(~val, !car); SET_CF(!GET_CF());
 
@@ -795,7 +795,7 @@ static void run_emulator(void) {
         case 0x97: SUB(A, 0); break;
 
         // ######################### SBB #########################
-        // A = A + ~val + !carry
+        // A = A + ~val + !carry            [Z,S,P,CY,AC]
  
         case 0x98: SUB(B, GET_CF()); break;
         case 0x99: SUB(C, GET_CF()); break;
