@@ -1794,7 +1794,16 @@ opcode_fc:
 
 CALL:
 opcode_cd:  ; CALL
-    KIL
+    PUSH PCH,PCL
+    lda byte2
+    sta PCL
+    ldx byte3
+    sta PCH
+    lda msb_to_adjusted,x
+    sta PCHa
+    lda msb_to_bank,x
+    sta curbank
+    sta PORTB
     jmp run_emulator
 
 opcode_c7:  ; RST0
@@ -1836,21 +1845,21 @@ opcode_ef:
     sta byte3
     lda #$28
     sta byte2
-    bne CALL
+    jmp CALL
 
 opcode_f7:
     lda #0
     sta byte3
     lda #$30
     sta byte2
-    bne CALL
+    jmp CALL
 
 opcode_ff:
     lda #0
     sta byte3
     lda #$38
     sta byte2
-    bne CALL
+    jmp CALL
 
     ; ######################### IMMEDIATE #########################
     ; func byte2
