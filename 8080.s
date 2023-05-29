@@ -925,15 +925,15 @@ opcode_7f:
 
         lda regF
         ora #CF_FLAG
-        sta regF
         bne @2
 
 @1:
         lda regF
         and #~CF_FLAG
-        sta regF
 
 @2:
+        sta regF
+
         txa                 ; result z back in accu
         eor regA
         eor :val
@@ -1003,15 +1003,15 @@ opcode_87:
 
         lda regF
         ora #CF_FLAG
-        sta regF
         bne @2
 
 @1:
         lda regF
         and #~CF_FLAG
-        sta regF
 
 @2:
+        sta regF
+
         txa                 ; result z back in accu
         eor regA
         eor :val
@@ -1081,15 +1081,15 @@ opcode_8f:
 
         lda regF
         ora #CF_FLAG
-        sta regF
         bne @2
 
 @1:
         lda regF
         and #~CF_FLAG
-        sta regF
 
 @2:
+        sta regF
+
         txa                 ; result z back in accu
         eor regA
         eor :val
@@ -1162,15 +1162,15 @@ opcode_97:
 
         lda regF
         ora #CF_FLAG
-        sta regF
         bne @2
 
 @1:
         lda regF
         and #~CF_FLAG
-        sta regF
 
 @2:
+        sta regF
+
         txa                 ; result z back in accu
         eor regA
         eor :val
@@ -1383,55 +1383,96 @@ opcode_b7:
     jmp run_emulator
 
     ; ######################### CMP #########################
-    ; CMP                              [Z,S,P,CY,AC]
+    ; CMP val                           [Z,S,P,CY,AC]
+
+    .macro _CMP val
+        lda regA
+        sec
+        sbc :val
+        tax
+        bcs @1
+
+        lda regF
+        ora #CF_FLAG
+        bne @2
+@1:
+        lda regF
+        and #~CF_FLAG
+
+@2:
+        sta regF
+
+        txa
+        eor regA
+        eor :val
+        eor #$ff
+        and #$10
+        bne @3
+
+        lda regF
+        and #~AF_FLAG
+        bne @4
+
+@3:
+        lda regF
+        ora #~AF_FLAG
+
+@4:
+        and #~(SF_FLAG|ZF_FLAG|PF_FLAG)
+        ora zsp_table,x
+        sta regF
+
+        stx regA
+    .endm
+
 opcode_b8:
-    KIL
+    _CMP regB
     jmp run_emulator
 
 opcode_b9:
-    KIL
+    _CMP regC
     jmp run_emulator
 
 opcode_ba:
-    KIL
+    _CMP regD
     jmp run_emulator
 
 opcode_bb:
-    KIL
+    _CMP regE
     jmp run_emulator
 
 opcode_bc:
-    KIL
+    _CMP regH
     jmp run_emulator
 
 opcode_bd:
-    KIL
+    _CMP regL
     jmp run_emulator
 
 opcode_be:
-    KIL
+    mem_read regL,regH,regM
+    _CMP regM
     jmp run_emulator
 
 opcode_bf:
-    KIL
+    _CMP regA
     jmp run_emulator
 
     ; ######################### RLC/RAL/DAA/STC #########################
     ;
-opcode_07:
-    KIL
+opcode_07:  ; RLC ---- A = A << 1;bit 0 = prev bit 7;CY = prev bit 7 [CY]
     jmp run_emulator
 
-opcode_17:
-    KIL
+opcode_17:  ; RAL ---- A = A << 1;bit 0 = prev CY;CY = prev bit 7 [CY]
     jmp run_emulator
 
-opcode_27:
-    KIL
+opcode_27:  ; DAA ---- Decimal Adjust Accumulator [Z,S,P,CY,AC]
     jmp run_emulator
 
-opcode_37:
-    KIL
+opcode_37:  ; STC ---- CY   CY = 1
+    lda regF
+    ora #CF_FLAG
+    sta regF
     jmp run_emulator
 
     ; ######################### POP/PUSH #########################
