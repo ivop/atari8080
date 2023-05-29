@@ -105,6 +105,9 @@ set_bank0:
 
     org $4000           ; 8080 memory at 00000h, bank 0
 
+    .byte 0
+    .byte 0
+
     .byte 0x76          ; HALT if WBOOT is called
     .word 0
     .byte 0xc3          ; JMP
@@ -1833,7 +1836,7 @@ opcode_e7:
     sta byte3
     lda #$20
     sta byte2
-    bne CALL
+    jmp CALL
 
 opcode_ef:
     lda #0
@@ -1998,13 +2001,6 @@ main:
     bput 0, banner_len, banner
 
     ; 8080 memory is already setup by the loader
-
-    ; set stack in BANK0 so we can monitor it easily
-
-    lda #0
-    sta SPL
-    lda #$3f
-    sta SPH
 
     ; set PC to test program
 
