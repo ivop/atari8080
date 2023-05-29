@@ -372,9 +372,9 @@ enum {
 #define CF_FLAG     0b00000001
 
 int main(int argc, char **argv) {
-    printf("static const uint8_t instruction_length[256] = {\n");
+    printf("instruction_length:\n");
     for (int i=0; i<16; i++) {
-        printf("\t");
+        printf("\tdta ");
         for (int j=0; j<16; j++) {
             int x;
             switch(distab8080[i*16+j].mode) {
@@ -384,48 +384,16 @@ int main(int argc, char **argv) {
             case MODE_JMP:  x=3; break;
             default:        x=1; break;
             }
-            printf("%1d, ", x);
+            printf("%1d", x);
+            if (j<15) printf(", ");
         }
         printf("\n");
     }
-    printf("};\n\n");
+    printf("\n");
 
-    printf("\
-enum addressing_mode {\n\
-    MODE_IMPL = 0,\n\
-    MODE_D8,\n\
-    MODE_D16,\n\
-    MODE_ADR,\n\
-    MODE_JMP,\n\
-    MODE_RST,\n\
-    MODE_RET,\n\
-    MODE_LAST\n\
-};\n\
-\n");
-
-    printf("static const uint8_t modes[256] = {\n");
-    for (int i=0; i<16; i++) {
-        printf("\t");
-        for (int j=0; j<16; j++) {
-            printf("%d, ", distab8080[i*16+j].mode);
-        }
-        printf("\n");
-    }
-    printf("};\n\n");
-
-    printf("static const char const *mnemonics[256] = {\n");
-    for (int i=0; i<64; i++) {
-        printf("\t");
-        for (int j=0; j<4; j++) {
-            printf("\"%s\", ", distab8080[i*4+j].inst);
-        }
-        printf("\n");
-    }
-    printf("};\n\n");
-
-    printf("static const uint8_t zsp_table[256] = {\n");
+    printf("zsp_table:\n");
     for (int i=0; i<32; i++) {
-        printf("\t");
+        printf("\tdta ");
         for (int j=0; j<8; j++) {
             int y=i*8+j;
             int x=y;
@@ -434,9 +402,10 @@ enum addressing_mode {\n\
                 p^=y&1;
                 y>>=1;
             }
-            printf("0x%02x, ", p*PF_FLAG | (x>=0x80)*SF_FLAG | (x==0)*ZF_FLAG);
+            printf("$%02x", p*PF_FLAG | (x>=0x80)*SF_FLAG | (x==0)*ZF_FLAG);
+            if (j<7) printf(", ");
         }
         printf("\n");
     }
-    printf("};\n\n");
+    printf("\n");
 }

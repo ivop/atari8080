@@ -186,6 +186,10 @@ msb_to_bank:
 :64 .byte BANK2
 :64 .byte BANK3
 
+; include instruction_length and zsp_table tables
+
+    icl 'tables/tables.s'
+
 ; --------------------------------------------------------------------------
 
     run run

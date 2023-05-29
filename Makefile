@@ -13,9 +13,6 @@ CFLAGS += -O3
 
 all: atari8080 atari8080-debug 8080.xex
 
-8080.xex: 8080.s cio.s
-	mads -o:8080.xex 8080.s
-
 atari8080: atari8080.c Makefile disk.img tables/tables.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
 
@@ -32,6 +29,12 @@ disk.img: Makefile
 
 tables/tables.h: tables/tablegen tables/tablegen.c
 	$(MAKE) -C tables tables.h
+
+8080.xex: 8080.s cio.s tables/tables.s
+	mads -o:8080.xex 8080.s
+
+tables/tables.s: tables/tablegen2 tables/tablegen2.c
+	$(MAKE) -C tables tables.s
 
 clean:
 	make -C tables clean
