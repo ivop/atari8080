@@ -524,30 +524,31 @@ opcode_3e:
         lda regH
         adc :regX
         sta regH
-        lda #0
-        adc #0
-        tax                         ; guaranteed 0 or 1
+        bcc clear_carry
+
+        lda regF
+        ora #CF_FLAG
+        sta regF
+        jmp run_emulator
+
+clear_carry
         lda regF
         and #~CF_FLAG
-        ora carry_off_on_table,x
         sta regF
+        jmp run_emulator
     .endm
 
 opcode_09:
-    DAD regB,regC
-    jmp run_emulator
+    DAD regB,regC       ; macro does jmp run_emulator
 
 opcode_19:
     DAD regD,regE
-    jmp run_emulator
 
 opcode_29:
     DAD regH,regL
-    jmp run_emulator
 
 opcode_39:
     DAD SPH,SPL
-    jmp run_emulator
 
     ; ######################### LOAD #########################
     ;
@@ -1629,9 +1630,6 @@ msb_to_adjusted:
 :64 dta $40+#
 :64 dta $40+#
 :64 dta $40+#
-
-carry_off_on_table:
-    dta 0, CF_FLAG
 
 ; include instruction_length and zsp_table tables
 
