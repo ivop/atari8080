@@ -86,6 +86,8 @@ PF_FLAG = %00000100
 ON_FLAG = %00000010     ; always on!
 CF_FLAG = %00000001
 
+ALL_FLAGS = (SF_FLAG|ZF_FLAG|AF_FLAG|PF_FLAG|ON_FLAG|CF_FLAG)
+
 ; --------------------------------------------------------------------------
 
 ; We just assume we are on a 130XE for now. atari800 -xe 8080.xex
@@ -1545,20 +1547,38 @@ opcode_37:  ; STC ---- CY   CY = 1
 
     ; ######################### POP/PUSH #########################
     ; POP XY       Y <- (SP); X <- (SP+1); SP <- SP+2
+
+    .macro POP regX, regY
+        mem_read_no_curbank_restore SPL,SPH,:regY
+        inc SPL
+        bne @1
+        inc SPH
+@1:
+        mem_read SPL,SPH,:regX
+        inc SPL
+        bne @2
+        inc SPH
+@2:
+    .endm
+
 opcode_c1:
-    KIL
+    POP regB,regC
     jmp run_emulator
 
 opcode_d1:
-    KIL
+    POP regD,regE
     jmp run_emulator
 
 opcode_e1:
-    KIL
+    POP regH,regL
     jmp run_emulator
 
 opcode_f1:
-    KIL
+    POP regA,regF
+    lda regF
+    ora #~ON_FLAG
+    and #ALL_FLAGS
+    sta regF
     jmp run_emulator
 
     ; PUSH XY      (SP-2) <- Y; (SP-1) <- X; SP <- SP-2
