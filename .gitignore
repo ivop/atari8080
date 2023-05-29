@@ -7,3 +7,5 @@ bootsectors.bin
 tables/tablegen
 tables/tables.h
 8080.xex
+tables/tablegen2
+tables/tables.s
