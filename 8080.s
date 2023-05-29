@@ -1954,7 +1954,7 @@ opcode_f9:  ; SPHL ---- SP <- HL
     ; ######################### OUT/IN #########################
     ;
 opcode_d3:
-    KIL
+    jsr MY_BIOS
     jmp run_emulator
 
 opcode_db:
@@ -1985,6 +1985,32 @@ opcode_ed:
 opcode_fd:
     bput 0, undefined_len, undefined
     rts
+
+; --------------------------------------------------------------------------
+
+MY_BIOS:
+    lda byte2
+    cmp #2
+    beq const
+    cmp #4
+    beq conout
+    KIL
+
+const:
+    lda #0          ; no key pending
+    sta regA
+list:
+    rts
+
+conout:
+    lda regC
+    sta charbuf
+    bput 0, 1, charbuf
+    ldy #0
+    rts
+
+charbuf:
+    .byte 0
 
 ; --------------------------------------------------------------------------
 
@@ -2035,7 +2061,7 @@ banner:
 banner_len = *-banner
 
 halted:
-    dta 'Emulator was halted.', $9b
+    dta $9b, 'Emulator was halted.', $9b
 halted_len = * - halted
 
 undefined:
