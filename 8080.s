@@ -228,8 +228,12 @@ set_bank3:
 
     org $8000
 
+; Enter with Y=0!
+
+; If an opcode really needs to use Y, it has to set it back to zero upon
+; returning here!
+
 run_emulator:
-    ldy #0
     lda (PCL),y                 ; retrieve instruction
 
     tax                         ; set trampoline
@@ -469,11 +473,47 @@ opcode_3d:
     DCR regA
     jmp run_emulator
 
-    ; ------------------------ unimplemented ------------------
+    ; ######################### MVI #########################
+    ; MVI reg       reg = byte2
+
+    .macro MVI REG
+        lda byte2
+        sta :REG
+    .endm
 
 opcode_06:
-    KIL
+    MVI regB
     jmp run_emulator
+
+opcode_0e:
+    MVI regC
+    jmp run_emulator
+
+opcode_16:
+    MVI regD
+    jmp run_emulator
+
+opcode_1e:
+    MVI regE
+    jmp run_emulator
+
+opcode_26:
+    MVI regH
+    jmp run_emulator
+
+opcode_2e:
+    MVI regL
+    jmp run_emulator
+
+opcode_36:
+    mem_write regL, regH, byte2
+    jmp run_emulator
+
+opcode_3e:
+    MVI regA
+    jmp run_emulator
+
+    ; ------------------------ unimplemented ------------------
 
 opcode_07:
     KIL
@@ -495,19 +535,11 @@ opcode_0b:
     KIL
     jmp run_emulator
 
-opcode_0e:
-    KIL
-    jmp run_emulator
-
 opcode_0f:
     KIL
     jmp run_emulator
 
 opcode_10:
-    KIL
-    jmp run_emulator
-
-opcode_16:
     KIL
     jmp run_emulator
 
@@ -531,19 +563,11 @@ opcode_1b:
     KIL
     jmp run_emulator
 
-opcode_1e:
-    KIL
-    jmp run_emulator
-
 opcode_1f:
     KIL
     jmp run_emulator
 
 opcode_20:
-    KIL
-    jmp run_emulator
-
-opcode_26:
     KIL
     jmp run_emulator
 
@@ -567,19 +591,11 @@ opcode_2b:
     KIL
     jmp run_emulator
 
-opcode_2e:
-    KIL
-    jmp run_emulator
-
 opcode_2f:
     KIL
     jmp run_emulator
 
 opcode_30:
-    KIL
-    jmp run_emulator
-
-opcode_36:
     KIL
     jmp run_emulator
 
@@ -600,10 +616,6 @@ opcode_3a:
     jmp run_emulator
 
 opcode_3b:
-    KIL
-    jmp run_emulator
-
-opcode_3e:
     KIL
     jmp run_emulator
 
@@ -1410,6 +1422,8 @@ main:
 
     lda #ON_FLAG            ; always on, never zeroed (if the code is correct)
     sta regF
+
+    ldy #0                  ; Always enter emulation loop with Y=0
 
     jsr run_emulator
 
