@@ -1574,7 +1574,7 @@ opcode_e1:
 opcode_f1:
     POP regA,regF
     lda regF
-    ora #~ON_FLAG
+    ora #ON_FLAG
     and #ALL_FLAGS
     sta regF
     jmp run_emulator
