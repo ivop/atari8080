@@ -75,6 +75,8 @@ byte3       = ZP+20
 byte2       = ZP+21
 byte3a      = ZP+22     ; for SHLD for example (adr)<-L;(adr+1)<-H
 
+regM    = ZP+23         ; temporary M register, optimize later
+
 SF_FLAG = %10000000
 ZF_FLAG = %01000000
 AF_FLAG = %00010000
@@ -143,6 +145,78 @@ set_bank3:
 ; --------------------------------------------------------------------------
 
 ; MACROS HERE
+
+    ; Read value from LOC and write to address of which LOW and HIGH
+    ; are its low and high byte POINTER (i.e. zero page locations).
+    ;
+    ; Assumes Y=0 on entry!
+    ;
+    ; It uses HIGH+2 for its adjusted high byte. Memory layout MUST be
+    ;
+    ; * HIGH
+    ; * LOW = HIGH+1
+    ; * HIGH_adjusted = HIGH+2
+    ;
+    ; This assures that (LOW),y points to the right memory location when
+    ; the proper bank is selected.
+    ; curbank is restored for instruction fetching afterwards.
+    ;
+    ; Most of the time LOC will denote a register, but it can be any
+    ; zero page location.
+
+    .macro mem_write LOW, HIGH, LOC     ; assume Y=0
+        ldx :HIGH
+        lda msb_to_adjusted,x
+        sta :HIGH+2
+        lda msb_to_bank,x
+        sta PORTB
+        lda :LOC
+        sta (:LOW),y
+        lda curbank
+        sta PORTB
+    .endm
+
+    ; Same, but does not restore curbank at the end. Use with caution!
+
+    .macro mem_write_no_curbank_restore LOW, HIGH, LOC     ; assume Y=0
+        ldx :HIGH
+        lda msb_to_adjusted,x
+        sta :HIGH+2
+        lda msb_to_bank,x
+        sta PORTB
+        lda :LOC
+        sta (:LOW),y
+    .endm
+
+    ; Similar to mem_write, but READ from (LOW),y and store in LOC
+
+    .macro mem_read LOW, HIGH, LOC
+        ldx :HIGH
+        lda msb_to_adjusted,x
+        sta :HIGH+2
+        lda msb_to_bank,x
+        sta PORTB
+        lda (:LOW),y            ; these are reversed!
+        sta :LOC                ;
+        lda curbank
+        sta PORTB
+    .endm
+
+    ; Same, but does not restore curbank at the end. Use with caution!
+
+    .macro mem_read_no_curbank_restore LOW, HIGH, LOC     ; assume Y=0
+        ldx :HIGH
+        lda msb_to_adjusted,x
+        sta :HIGH+2
+        lda msb_to_bank,x
+        sta PORTB
+        lda (:LOW),y
+        sta :LOC
+    .endm
+
+    .macro KIL           ; used to stop 6502 emulation and jump to debugger   
+        dta 2
+    .endm
 
 ; --------------------------------------------------------------------------
 
@@ -214,10 +288,6 @@ trampoline = *+1
 
 ; --------------------------------------------------------------------------
 
-    .macro KIL           ; used to stop 6502 emulation and jump to debugger   
-        dta 2
-    .endm
-
 opcode_00: ; NOP
     jmp run_emulator
 
@@ -249,48 +319,6 @@ opcode_31:
 
     ; ######################### STORE #########################
     ;
-
-    ; Read value from LOC and write to address of which LOW and HIGH
-    ; are its low and high byte POINTER (i.e. zero page locations).
-    ;
-    ; Assumes Y=0 on entry!
-    ;
-    ; It uses HIGH+2 for its adjusted high byte. Memory layout MUST be
-    ;
-    ; * HIGH
-    ; * LOW = HIGH+1
-    ; * HIGH_adjusted = HIGH+2
-    ;
-    ; This assures that (LOW),y points to the right memory location when
-    ; the proper bank is selected.
-    ; curbank is restored for instruction fetching afterwards.
-    ;
-    ; Most of the time LOC will denote a register, but it can be any
-    ; zero page location.
-
-    .macro mem_write LOW, HIGH, LOC     ; assume Y=0
-        ldx :HIGH
-        lda msb_to_adjusted,x
-        sta :HIGH+2
-        lda msb_to_bank,x
-        sta PORTB
-        lda :LOC
-        sta (:LOW),y
-        lda curbank
-        sta PORTB
-    .endm
-
-    ; Same, but does not restore curbank at the end. Use with caution!
-
-    .macro mem_write_no_curbank_restore LOW, HIGH, LOC     ; assume Y=0
-        ldx :HIGH
-        lda msb_to_adjusted,x
-        sta :HIGH+2
-        lda msb_to_bank,x
-        sta PORTB
-        lda :LOC
-        sta (:LOW),y
-    .endm
 
 opcode_02:  ; STAX B ---- (BC) <- A
     mem_write regC, regB, regA
@@ -339,11 +367,58 @@ opcode_33:
     _INX SPH,SPL
     jmp run_emulator
 
-    ; ------------------------ unimplemented ------------------
+    ; ######################### INR #########################
+    ; INR reg = reg + 1                 [Z,S,P,AC]
+
+    .macro INR REG
+        inc :REG
+        ldx :REG
+
+        lda regF
+        and #~(ZF_FLAG|SF_FLAG|PF_FLAG|AF_FLAG)
+        ora inr_af_table,x          ; (reg&0x0f)==0
+        ora zsp_table,x
+        sta regF
+    .endm
 
 opcode_04:
-    KIL
+    INR regB
     jmp run_emulator
+
+opcode_0c:
+    INR regC
+    jmp run_emulator
+
+opcode_14:
+    INR regD
+    jmp run_emulator
+
+opcode_1c:
+    INR regE
+    jmp run_emulator
+
+opcode_24:
+    INR regH
+    jmp run_emulator
+
+opcode_2c:
+    INR regL
+    jmp run_emulator
+
+opcode_34: ; INR M
+    mem_read_no_curbank_restore regL, regH, regM
+    INR regM
+    txa             ; still in X
+    sta (regL),y    ; mem_read has setup the adjusted register and bank
+    lda curbank
+    sta PORTB
+    jmp run_emulator
+
+opcode_3c:
+    INR regA
+    jmp run_emulator
+
+    ; ------------------------ unimplemented ------------------
 
 opcode_05:
     KIL
@@ -373,10 +448,6 @@ opcode_0b:
     KIL
     jmp run_emulator
 
-opcode_0c:
-    KIL
-    jmp run_emulator
-
 opcode_0d:
     KIL
     jmp run_emulator
@@ -390,10 +461,6 @@ opcode_0f:
     jmp run_emulator
 
 opcode_10:
-    KIL
-    jmp run_emulator
-
-opcode_14:
     KIL
     jmp run_emulator
 
@@ -425,10 +492,6 @@ opcode_1b:
     KIL
     jmp run_emulator
 
-opcode_1c:
-    KIL
-    jmp run_emulator
-
 opcode_1d:
     KIL
     jmp run_emulator
@@ -442,10 +505,6 @@ opcode_1f:
     jmp run_emulator
 
 opcode_20:
-    KIL
-    jmp run_emulator
-
-opcode_24:
     KIL
     jmp run_emulator
 
@@ -477,10 +536,6 @@ opcode_2b:
     KIL
     jmp run_emulator
 
-opcode_2c:
-    KIL
-    jmp run_emulator
-
 opcode_2d:
     KIL
     jmp run_emulator
@@ -494,10 +549,6 @@ opcode_2f:
     jmp run_emulator
 
 opcode_30:
-    KIL
-    jmp run_emulator
-
-opcode_34:
     KIL
     jmp run_emulator
 
@@ -526,10 +577,6 @@ opcode_3a:
     jmp run_emulator
 
 opcode_3b:
-    KIL
-    jmp run_emulator
-
-opcode_3c:
     KIL
     jmp run_emulator
 
