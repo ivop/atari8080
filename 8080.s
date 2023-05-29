@@ -45,6 +45,8 @@ ZP = $e0
 regA = ZP
 regF = ZP+1
 
+; adjusted variants MUST be at offset +2 from normal register
+
 regB  = ZP+2
 regC  = ZP+3
 regBa = ZP+4        ; adjusted when needed. lda (regC),y to implement (BC)
