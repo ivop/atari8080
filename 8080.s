@@ -1885,12 +1885,19 @@ opcode_fe:          ; CPI
 
     ; ######################### XTHL/XCHG #########################
     ;
-opcode_e3:
-    KIL
+opcode_e3:  ; XTHL ---- L <-> (SP);H <-> (SP+1)
     jmp run_emulator
 
-opcode_eb:
-    KIL
+opcode_eb:  ; XCHG ---- H <-> D;L <-> E
+    ldx regH
+    lda regD
+    sta regH
+    stx regD
+
+    ldx regL
+    lda regE
+    sta regL
+    stx regE
     jmp run_emulator
 
     ; ######################### PCHL/SPHL #########################
