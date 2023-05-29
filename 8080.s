@@ -1461,9 +1461,41 @@ opcode_bf:
     ; ######################### RLC/RAL/DAA/STC #########################
     ;
 opcode_07:  ; RLC ---- A = A << 1;bit 0 = prev bit 7;CY = prev bit 7 [CY]
+    clc
+    rol regA
+    lda regA
+    adc #1
+    sta regA
+    bcc @1
+
+    lda regF
+    ora #CF_FLAG
+    bne @2
+
+@1:
+    lda regF
+    and #~CF_FLAG
+
+@2:
+    sta regF
     jmp run_emulator
 
 opcode_17:  ; RAL ---- A = A << 1;bit 0 = prev CY;CY = prev bit 7 [CY]
+    lda regF
+    lsr                 ; CF to carry bit
+    rol regA
+    bcc @3
+
+    lda regF
+    ora #CF_FLAG
+    bne @4
+
+@3:
+    lda regF
+    and #~CF_FLAG
+
+@4:
+    sta regF
     jmp run_emulator
 
 opcode_27:  ; DAA ---- Decimal Adjust Accumulator [Z,S,P,CY,AC]
