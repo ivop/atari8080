@@ -574,20 +574,29 @@ opcode_3a:  ; // LDA adr ---- A <- (adr)
 
     ; ######################### DCX #########################
     ; DCX XY       XY <- XY-1
+
+    .macro DCX regX, regY
+        lda :regY
+        bne @+
+        dec :regX
+@:
+        dec :regY
+    .endm
+
 opcode_0b:
-    KIL
+    DCX regB,regC
     jmp run_emulator
 
 opcode_1b:
-    KIL
+    DCX regD,regE
     jmp run_emulator
 
 opcode_2b:
-    KIL
+    DCX regH,regL
     jmp run_emulator
 
 opcode_3b:
-    KIL
+    DCX SPL,SPH
     jmp run_emulator
 
     ; ######################### RRC/RAR/CMA/CMC #########################
