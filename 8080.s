@@ -247,11 +247,56 @@ opcode_31:
     LXI SPH,SPL
     jmp run_emulator
 
-    ; ------------------------ unimplemented ------------------
+    ; ######################### STORE #########################
+    ;
 
-opcode_02:
+    ; Read value from LOC and write to address of which LOW and HIGH
+    ; are its low and high byte POINTER (i.e. zero page locations).
+    ;
+    ; Assumes Y=0 on entry!
+    ;
+    ; It uses HIGH+2 for its adjusted high byte. Memory layout MUST be
+    ;
+    ; * HIGH
+    ; * LOW = HIGH+1
+    ; * HIGH_adjusted = HIGH+2
+    ;
+    ; This assures that (LOW),y points to the right memory location when
+    ; the proper bank is selected.
+    ; curbank is restored for instruction fetching afterwards.
+    ;
+    ; Most of the time LOC will denote a register, but it can be any
+    ; zero page location.
+
+    .macro mem_write LOW, HIGH, LOC     ; assume Y=0
+        ldx :HIGH
+        lda msb_to_adjusted,x
+        sta :HIGH+2
+        lda msb_to_bank,x
+        sta PORTB
+        lda :LOC
+        sta (:LOW),y
+        lda curbank
+        sta PORTB
+    .endm
+
+opcode_02:  ; STAX B ---- (BC) <- A
+    mem_write regC, regB, regA
+    jmp run_emulator
+
+opcode_12:  ; STAX D ---- (DE) <- A
+    mem_write regE, regD, regA
+    jmp run_emulator
+
+opcode_22:  ; SHLD adr ---- (adr) <-L;(adr+1) <- H
     KIL
     jmp run_emulator
+
+opcode_32:  ; STA adr ---- (adr) <- A
+    KIL
+    jmp run_emulator
+
+    ; ------------------------ unimplemented ------------------
 
 opcode_03:
     KIL
@@ -306,10 +351,6 @@ opcode_0f:
     jmp run_emulator
 
 opcode_10:
-    KIL
-    jmp run_emulator
-
-opcode_12:
     KIL
     jmp run_emulator
 
@@ -369,10 +410,6 @@ opcode_20:
     KIL
     jmp run_emulator
 
-opcode_22:
-    KIL
-    jmp run_emulator
-
 opcode_23:
     KIL
     jmp run_emulator
@@ -426,10 +463,6 @@ opcode_2f:
     jmp run_emulator
 
 opcode_30:
-    KIL
-    jmp run_emulator
-
-opcode_32:
     KIL
     jmp run_emulator
 
