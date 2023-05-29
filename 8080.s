@@ -827,9 +827,8 @@ opcode_75:
     KIL
     jmp run_emulator
 
-opcode_76:
-    KIL
-    jmp run_emulator
+opcode_76:  ; HaLT!
+    rts     ; Leave emulation loop
 
 opcode_77:
     KIL
@@ -1383,7 +1382,7 @@ opcode_ff:
 
 ; SETUP EMULATOR
 
-run:
+main:
     lda #0
     sta LMARGN
     sta COLCRS
@@ -1586,5 +1585,5 @@ msb_to_adjusted:
 
 ; --------------------------------------------------------------------------
 
-    run run
+    run main
 
