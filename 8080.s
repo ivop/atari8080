@@ -1727,11 +1727,6 @@ opcode_fa:
 _JMP:
 opcode_c3: ; JMP
     lda byte2
-    ora byte3
-    bne do_jmp
-    KIL
-do_jmp
-    lda byte2
     sta PCL
     ldx byte3               ; use X, saves one instruction
     stx PCH
