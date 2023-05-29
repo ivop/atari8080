@@ -1922,11 +1922,23 @@ opcode_eb:  ; XCHG ---- H <-> D;L <-> E
 
     ; ######################### PCHL/SPHL #########################
     ;
-opcode_e9:
-    KIL
+opcode_e9:  ; PCHL ---- PC.hi <- H;PC.lo <- L
+    lda regL
+    sta PCL
+    ldx regH
+    stx PCH
+    lda msb_to_adjusted,x
+    sta PCHa
+    lda msb_to_bank,x
+    sta curbank
+    sta PORTB
     jmp run_emulator
-opcode_f9:
-    KIL
+
+opcode_f9:  ; SPHL ---- SP <- HL
+    lda regL
+    sta SPL
+    lda regH
+    sta SPH
     jmp run_emulator
 
     ; ######################### OUT/IN #########################
