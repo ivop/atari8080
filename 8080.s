@@ -652,259 +652,265 @@ opcode_3f: ; CMC ---- CY=!CY [CY]
     ; ######################### MOV #########################
     ;
 
+    .macro MOV dst, src
+        lda :dst
+        sta :src
+    .endm
+
+    ; MOV B,x   (for x in B,C,D,E,H,L,M,A)
 opcode_40:
-    KIL
     jmp run_emulator
 
 opcode_41:
-    KIL
+    MOV regB,regC
     jmp run_emulator
 
 opcode_42:
-    KIL
+    MOV regB,regD
     jmp run_emulator
 
 opcode_43:
-    KIL
+    MOV regB,regE
     jmp run_emulator
 
 opcode_44:
-    KIL
+    MOV regB,regH
     jmp run_emulator
 
 opcode_45:
-    KIL
+    MOV regB,regL
     jmp run_emulator
 
 opcode_46:
-    KIL
+    mem_read regL,regH,regB
     jmp run_emulator
 
 opcode_47:
-    KIL
+    MOV regB,regA
     jmp run_emulator
 
+    ; MOV C,x   (for x in B,C,D,E,H,L,M,A)
 opcode_48:
-    KIL
+    MOV regC,regB
     jmp run_emulator
 
 opcode_49:
-    KIL
     jmp run_emulator
 
 opcode_4a:
-    KIL
+    MOV regC,regD
     jmp run_emulator
 
 opcode_4b:
-    KIL
+    MOV regC,regE
     jmp run_emulator
 
 opcode_4c:
-    KIL
+    MOV regC,regH
     jmp run_emulator
 
 opcode_4d:
-    KIL
+    MOV regC,regL
     jmp run_emulator
 
 opcode_4e:
-    KIL
+    mem_read regL,regH,regC
     jmp run_emulator
 
 opcode_4f:
-    KIL
+    MOV regC,regA
     jmp run_emulator
 
+    ; MOV D,x   (for x in B,C,D,E,H,L,M,A)
 opcode_50:
-    KIL
+    MOV regD,regB
     jmp run_emulator
 
 opcode_51:
-    KIL
+    MOV regD,regC
     jmp run_emulator
 
 opcode_52:
-    KIL
     jmp run_emulator
 
 opcode_53:
-    KIL
+    MOV regD,regE
     jmp run_emulator
 
 opcode_54:
-    KIL
+    MOV regD,regH
     jmp run_emulator
 
 opcode_55:
-    KIL
+    MOV regD,regL
     jmp run_emulator
 
 opcode_56:
-    KIL
+    mem_read regL,regH,regD
     jmp run_emulator
 
 opcode_57:
-    KIL
+    MOV regD,regA
     jmp run_emulator
 
+    ; MOV E,x   (for x in B,C,D,E,H,L,M,A)
 opcode_58:
-    KIL
+    MOV regE,regB
     jmp run_emulator
 
 opcode_59:
-    KIL
+    MOV regE,regC
     jmp run_emulator
 
 opcode_5a:
-    KIL
+    MOV regE,regD
     jmp run_emulator
 
 opcode_5b:
-    KIL
     jmp run_emulator
 
 opcode_5c:
-    KIL
+    MOV regE,regH
     jmp run_emulator
 
 opcode_5d:
-    KIL
+    MOV regE,regL
     jmp run_emulator
 
 opcode_5e:
-    KIL
+    mem_read regL,regH,regE
     jmp run_emulator
 
 opcode_5f:
-    KIL
+    MOV regE,regA
     jmp run_emulator
 
+    ; MOV H,x   (for x in B,C,D,E,H,L,M,A)
 opcode_60:
-    KIL
+    MOV regH,regB
     jmp run_emulator
 
 opcode_61:
-    KIL
+    MOV regH,regC
     jmp run_emulator
 
 opcode_62:
-    KIL
+    MOV regH,regD
     jmp run_emulator
 
 opcode_63:
-    KIL
+    MOV regH,regE
     jmp run_emulator
 
 opcode_64:
-    KIL
     jmp run_emulator
 
 opcode_65:
-    KIL
+    MOV regH,regL
     jmp run_emulator
 
 opcode_66:
-    KIL
+    mem_read regL,regH,regH
     jmp run_emulator
 
 opcode_67:
-    KIL
+    MOV regH,regA
     jmp run_emulator
 
+    ; MOV L,x   (for x in B,C,D,E,H,L,M,A)
 opcode_68:
-    KIL
+    MOV regL,regB
     jmp run_emulator
 
 opcode_69:
-    KIL
+    MOV regL,regC
     jmp run_emulator
 
 opcode_6a:
-    KIL
+    MOV regL,regD
     jmp run_emulator
 
 opcode_6b:
-    KIL
+    MOV regL,regE
     jmp run_emulator
 
 opcode_6c:
-    KIL
+    MOV regL,regH
     jmp run_emulator
 
 opcode_6d:
-    KIL
     jmp run_emulator
 
 opcode_6e:
-    KIL
+    mem_read regL,regH,regL
     jmp run_emulator
 
 opcode_6f:
-    KIL
+    MOV regL,regA
     jmp run_emulator
 
+    ; MOV M,x   (for x in B,C,D,E,H,L,M,A)
 opcode_70:
-    KIL
+    mem_write regL,regH,regB
     jmp run_emulator
 
 opcode_71:
-    KIL
+    mem_write regL,regH,regC
     jmp run_emulator
 
 opcode_72:
-    KIL
+    mem_write regL,regH,regD
     jmp run_emulator
 
 opcode_73:
-    KIL
+    mem_write regL,regH,regE
     jmp run_emulator
 
 opcode_74:
-    KIL
+    mem_write regL,regH,regH
     jmp run_emulator
 
 opcode_75:
-    KIL
+    mem_write regL,regH,regL
     jmp run_emulator
 
 opcode_76:  ; HaLT!
     rts     ; Leave emulation loop
 
 opcode_77:
-    KIL
+    mem_write regL,regH,regA
     jmp run_emulator
 
+    ; MOV A,x   (for x in B,C,D,E,H,L,M,A)
 opcode_78:
-    KIL
+    MOV regA,regB
     jmp run_emulator
 
 opcode_79:
-    KIL
+    MOV regA,regC
     jmp run_emulator
 
 opcode_7a:
-    KIL
+    MOV regA,regD
     jmp run_emulator
 
 opcode_7b:
-    KIL
+    MOV regA,regE
     jmp run_emulator
 
 opcode_7c:
-    KIL
+    MOV regA,regH
     jmp run_emulator
 
 opcode_7d:
-    KIL
+    MOV regA,regL
     jmp run_emulator
 
 opcode_7e:
-    KIL
+    mem_read regL,regH,regA
     jmp run_emulator
 
 opcode_7f:
-    KIL
     jmp run_emulator
 
     ; ######################### ADD #########################
