@@ -215,13 +215,36 @@ trampoline = *+1
         dta 2
     .endm
 
-opcode_00:
-    KIL
+opcode_00: ; NOP
     jmp run_emulator
 
+    ; ######################### LXI #########################
+    ; LXI XY       X <- byte3; Y <- byte2
+
+    .macro LXI regX, regY
+        lda byte3
+        sta :regX
+        lda byte2
+        sta :regY
+    .endm
+
 opcode_01:
-    KIL
+    LXI regB,regC
     jmp run_emulator
+
+opcode_11:
+    LXI regD,regE
+    jmp run_emulator
+
+opcode_21:
+    LXI regH,regL
+    jmp run_emulator
+
+opcode_31:
+    LXI SPH,SPL
+    jmp run_emulator
+
+    ; ------------------------ unimplemented ------------------
 
 opcode_02:
     KIL
@@ -280,10 +303,6 @@ opcode_0f:
     jmp run_emulator
 
 opcode_10:
-    KIL
-    jmp run_emulator
-
-opcode_11:
     KIL
     jmp run_emulator
 
@@ -347,10 +366,6 @@ opcode_20:
     KIL
     jmp run_emulator
 
-opcode_21:
-    KIL
-    jmp run_emulator
-
 opcode_22:
     KIL
     jmp run_emulator
@@ -408,10 +423,6 @@ opcode_2f:
     jmp run_emulator
 
 opcode_30:
-    KIL
-    jmp run_emulator
-
-opcode_31:
     KIL
     jmp run_emulator
 
