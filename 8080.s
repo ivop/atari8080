@@ -516,20 +516,37 @@ opcode_3e:
     ; ######################### DAD #########################
     ; DAD XY                           HL = HL + XY    [CY]
 
+    .macro DAD regX regY
+        lda regL
+        clc
+        adc :regY
+        sta regL
+        lda regH
+        adc :regX
+        sta regH
+        lda #0
+        adc #0
+        tax                         ; guaranteed 0 or 1
+        lda regF
+        and #~CF_FLAG
+        ora carry_off_on_table,x
+        sta regF
+    .endm
+
 opcode_09:
-    KIL
+    DAD regB,regC
     jmp run_emulator
 
 opcode_19:
-    KIL
+    DAD regD,regE
     jmp run_emulator
 
 opcode_29:
-    KIL
+    DAD regH,regL
     jmp run_emulator
 
 opcode_39:
-    KIL
+    DAD SPH,SPL
     jmp run_emulator
 
     ; ######################### LOAD #########################
@@ -1612,6 +1629,9 @@ msb_to_adjusted:
 :64 dta $40+#
 :64 dta $40+#
 :64 dta $40+#
+
+carry_off_on_table:
+    dta 0, CF_FLAG
 
 ; include instruction_length and zsp_table tables
 
