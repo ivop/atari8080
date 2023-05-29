@@ -915,36 +915,79 @@ opcode_7f:
 
     ; ######################### ADD #########################
     ; A = A + val                      [Z,S,P,CY,AC]
+
+    .macro _ADD val         ; add is reserved keyword
+        lda regA
+        clc
+        adc :val
+        tax                 ; save temporarily, and we need it as index
+        bcc @1+             ; use 6502 carry to set regF
+
+        lda regF
+        ora #CF_FLAG
+        sta regF
+        bne @2+
+
+ @1:
+        lda regF
+        and #~CF_FLAG
+        sta regF
+
+@2:
+        txa                 ; result z back in accu
+        eor regA
+        eor :val
+        and #$10
+        beq @3+
+
+        lda regF
+        ora #AF_FLAG
+;        sta regF
+        bne @4+
+
+@3:
+        lda regF
+        and #~AF_FLAG
+;        sta regF
+
+@4:
+        and #~(SF_FLAG|ZF_FLAG|PF_FLAG)
+        ora zsp_table,x
+        sta regF
+        stx regA
+    .endm
+
 opcode_80:
-    KIL
+    ADD regB
     jmp run_emulator
 
 opcode_81:
-    KIL
+    ADD regC
     jmp run_emulator
 
 opcode_82:
-    KIL
+    ADD regD
     jmp run_emulator
 
 opcode_83:
-    KIL
+    ADD regE
     jmp run_emulator
 
 opcode_84:
-    KIL
+    ADD regH
     jmp run_emulator
 
 opcode_85:
-    KIL
+    ADD regL
     jmp run_emulator
 
 opcode_86:
-    KIL
+    mem_read regL,regH,regM
+    ADD regM
     jmp run_emulator
 
 opcode_87:
-    KIL
+    ADD regA
     jmp run_emulator
 
     ; ######################### ADC #########################
