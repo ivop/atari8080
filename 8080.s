@@ -1851,36 +1851,36 @@ opcode_ff:
 
     ; ######################### IMMEDIATE #########################
     ; func byte2
-opcode_c6:
-    KIL
+opcode_c6:          ; ADI
+    _ADD byte2
     jmp run_emulator
 
-opcode_ce:
-    KIL
+opcode_ce:          ; ACI
+    _ADC byte2
     jmp run_emulator
 
-opcode_d6:
-    KIL
+opcode_d6:          ; SUI
+    _SUB byte2
     jmp run_emulator
 
-opcode_de:
-    KIL
+opcode_de:          ; SBI
+    _SBC byte2
     jmp run_emulator
 
-opcode_e6:
-    KIL
+opcode_e6:          ; ANI
+    ANA byte2
     jmp run_emulator
 
-opcode_ee:
-    KIL
+opcode_ee:          ; XRI
+    XRA byte2
     jmp run_emulator
 
-opcode_f6:
-    KIL
+opcode_f6:          ; ORI
+    _ORA byte2
     jmp run_emulator
 
-opcode_fe:
-    KIL
+opcode_fe:          ; CPI
+    _CMP byte2
     jmp run_emulator
 
     ; ######################### XTHL/XCHG #########################
