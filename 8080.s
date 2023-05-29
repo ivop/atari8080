@@ -69,8 +69,9 @@ curbank  = ZP+17    ; direct PORTB values
 savebank = ZP+18
 
 instruction = ZP+19     ; do we need this?
-byte2       = ZP+20
-byte3       = ZP+21
+byte3       = ZP+20
+byte2       = ZP+21
+byte3a      = ZP+22     ; for SHLD for example (adr)<-L;(adr+1)<-H
 
 SF_FLAG = %10000000
 ZF_FLAG = %01000000
