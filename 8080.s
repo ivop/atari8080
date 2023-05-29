@@ -657,8 +657,8 @@ opcode_3f: ; CMC ---- CY=!CY [CY]
     ;
 
     .macro MOV dst, src
-        lda :dst
-        sta :src
+        lda :src
+        sta :dst
     .endm
 
     ; MOV B,x   (for x in B,C,D,E,H,L,M,A)
@@ -1798,7 +1798,7 @@ opcode_cd:  ; CALL
     lda byte2
     sta PCL
     ldx byte3
-    sta PCH
+    stx PCH
     lda msb_to_adjusted,x
     sta PCHa
     lda msb_to_bank,x
@@ -2003,6 +2003,13 @@ main:
     bput 0, banner_len, banner
 
     ; 8080 memory is already setup by the loader
+
+    ; set stack in BANK0 so we can monitor it easily
+
+    lda #0
+    sta SPL
+    lda #$3f
+    sta SPH
 
     ; set PC to test program
 
