@@ -1742,72 +1742,112 @@ opcode_c3: ; JMP
     ; ######################### CALL/RST #########################
     ;
 opcode_c4:
-    KIL
+    lda regF
+    and #ZF_FLAG
+    beq CALL
     jmp run_emulator
 
 opcode_cc:
-    KIL
+    lda regF
+    and #ZF_FLAG
+    bne CALL
     jmp run_emulator
 
 opcode_d4:
-    KIL
+    lda regF
+    and #CF_FLAG
+    beq CALL
     jmp run_emulator
 
 opcode_dc:
-    KIL
+    lda regF
+    and #CF_FLAG
+    bne CALL
     jmp run_emulator
 
 opcode_e4:
-    KIL
+    lda regF
+    and #PF_FLAG
+    beq CALL
     jmp run_emulator
 
 opcode_ec:
-    KIL
+    lda regF
+    and #PF_FLAG
+    bne CALL
     jmp run_emulator
 
 opcode_f4:
-    KIL
+    lda regF
+    and #SF_FLAG
+    beq CALL
     jmp run_emulator
 
 opcode_fc:
-    KIL
+    lda regF
+    and #SF_FLAG
+    bne CALL
     jmp run_emulator
 
+CALL:
 opcode_cd:  ; CALL
     KIL
     jmp run_emulator
 
-opcode_c7:
-    KIL
-    jmp run_emulator
+opcode_c7:  ; RST0
+    lda #0
+    sta byte3
+    sta byte2
+    beq CALL
 
-opcode_cf:
-    KIL
-    jmp run_emulator
+opcode_cf:  ; etc...
+    lda #0
+    sta byte3
+    lda #$08
+    sta byte2
+    bne CALL
 
 opcode_d7:
-    KIL
-    jmp run_emulator
+    lda #0
+    sta byte3
+    lda #$10
+    sta byte2
+    bne CALL
 
 opcode_df:
-    KIL
-    jmp run_emulator
+    lda #0
+    sta byte3
+    lda #$18
+    sta byte2
+    bne CALL
 
 opcode_e7:
-    KIL
-    jmp run_emulator
+    lda #0
+    sta byte3
+    lda #$20
+    sta byte2
+    bne CALL
 
 opcode_ef:
-    KIL
-    jmp run_emulator
+    lda #0
+    sta byte3
+    lda #$28
+    sta byte2
+    bne CALL
 
 opcode_f7:
-    KIL
-    jmp run_emulator
+    lda #0
+    sta byte3
+    lda #$30
+    sta byte2
+    bne CALL
 
 opcode_ff:
-    KIL
-    jmp run_emulator
+    lda #0
+    sta byte3
+    lda #$38
+    sta byte2
+    bne CALL
 
     ; ######################### IMMEDIATE #########################
     ; func byte2
