@@ -172,7 +172,7 @@ run_emulator:
                 lda msb_to_bank,x
                 sta curbank
                 sta PORTB
-                lda msb_to_pcha,x
+                lda msb_to_adjusted,x
                 sta PCHa
 no_adjust:
 no_inc_pch:
@@ -998,7 +998,7 @@ run:
     sta PCH
 
     tax
-    lda msb_to_pcha,x
+    lda msb_to_adjusted,x
     sta PCHa
     lda msb_to_bank,x
     sta curbank
@@ -1169,7 +1169,7 @@ msb_to_bank:
 :64 dta BANK2
 :64 dta BANK3
 
-msb_to_pcha:
+msb_to_adjusted:
 :64 dta $40+#
 :64 dta $40+#
 :64 dta $40+#
