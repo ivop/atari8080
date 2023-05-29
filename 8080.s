@@ -1886,6 +1886,26 @@ opcode_fe:          ; CPI
     ; ######################### XTHL/XCHG #########################
     ;
 opcode_e3:  ; XTHL ---- L <-> (SP);H <-> (SP+1)
+    mem_read_no_curbank_restore SPL,SPH,t8
+    mem_write_no_curbank_restore SPL,SPH,regL
+    lda t8
+    sta regL
+
+    inc SPL
+    bne @7
+    inc SPH
+@7:
+    mem_read_no_curbank_restore SPL,SPH,t8
+    mem_write SPL,SPH,regH                      ; curbank/PORTB restored
+    lda t8
+    sta regH
+
+    lda SPL
+    bne @8
+
+    dec SPH
+@8:
+    dec SPL
     jmp run_emulator
 
 opcode_eb:  ; XCHG ---- H <-> D;L <-> E
