@@ -603,7 +603,7 @@ static void run_emulator(void) {
         case 0x3e: A = byte2; break;
 
         // ######################### DAD #########################
-        // DAD XY                           HL = HK + XY    [CY]
+        // DAD XY                           HL = HL + XY    [CY]
 
 #define DAD(X,Y) \
             HL = (H<<8) | L; \
