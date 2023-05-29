@@ -601,20 +601,24 @@ opcode_3b:
 
     ; ######################### RRC/RAR/CMA/CMC #########################
     ;
-opcode_0f:
+opcode_0f: ; RRC --- A = A >> 1;bit 7 = prev bit 0;CY = prev bit 0 [CY]
     KIL
     jmp run_emulator
 
-opcode_1f:
+opcode_1f: ; RAR ---- A = A >> 1;bit 7 = prev CY;CY = prev bit 0 [CY]
     KIL
     jmp run_emulator
 
-opcode_2f:
-    KIL
+opcode_2f: ; CMA ---- A <- !A
+    lda regA
+    eor #$ff
+    sta regA
     jmp run_emulator
 
-opcode_3f:
-    KIL
+opcode_3f: ; CMC ---- CY=!CY [CY]
+    lda regF
+    eor #CF_FLAG
+    sta regF
     jmp run_emulator
 
     ; ######################### MOV #########################
