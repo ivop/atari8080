@@ -1582,20 +1582,37 @@ opcode_f1:
     jmp run_emulator
 
     ; PUSH XY      (SP-2) <- Y; (SP-1) <- X; SP <- SP-2
+
+    .macro PUSH regX, regY
+        lda SPL
+        bne @1
+        dec SPH
+@1:
+        dec SPL
+        mem_write_no_curbank_restore SPL,SPH,:regX
+
+        lda SPL
+        bne @2
+        dec SPH
+@2:
+        dec SPL
+        mem_write SPL,SPH,:regY
+    .endm
+
 opcode_c5:
-    KIL
+    PUSH regB,regC
     jmp run_emulator
 
 opcode_d5:
-    KIL
+    PUSH regD,regE
     jmp run_emulator
 
 opcode_e5:
-    KIL
+    PUSH regH,regL
     jmp run_emulator
 
 opcode_f5:
-    KIL
+    PUSH regA,regF
     jmp run_emulator
 
     ; ######################### RETCETERA #########################
