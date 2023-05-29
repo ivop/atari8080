@@ -519,10 +519,6 @@ opcode_07:
     KIL
     jmp run_emulator
 
-opcode_08:
-    KIL
-    jmp run_emulator
-
 opcode_09:
     KIL
     jmp run_emulator
@@ -539,15 +535,7 @@ opcode_0f:
     KIL
     jmp run_emulator
 
-opcode_10:
-    KIL
-    jmp run_emulator
-
 opcode_17:
-    KIL
-    jmp run_emulator
-
-opcode_18:
     KIL
     jmp run_emulator
 
@@ -567,15 +555,7 @@ opcode_1f:
     KIL
     jmp run_emulator
 
-opcode_20:
-    KIL
-    jmp run_emulator
-
 opcode_27:
-    KIL
-    jmp run_emulator
-
-opcode_28:
     KIL
     jmp run_emulator
 
@@ -595,15 +575,7 @@ opcode_2f:
     KIL
     jmp run_emulator
 
-opcode_30:
-    KIL
-    jmp run_emulator
-
 opcode_37:
-    KIL
-    jmp run_emulator
-
-opcode_38:
     KIL
     jmp run_emulator
 
@@ -1178,10 +1150,6 @@ opcode_ca:
     KIL
     jmp run_emulator
 
-opcode_cb:
-    KIL
-    jmp run_emulator
-
 opcode_cc:
     KIL
     jmp run_emulator
@@ -1234,10 +1202,6 @@ opcode_d8:
     KIL
     jmp run_emulator
 
-opcode_d9:
-    KIL
-    jmp run_emulator
-
 opcode_da:
     KIL
     jmp run_emulator
@@ -1247,10 +1211,6 @@ opcode_db:
     jmp run_emulator
 
 opcode_dc:
-    KIL
-    jmp run_emulator
-
-opcode_dd:
     KIL
     jmp run_emulator
 
@@ -1314,10 +1274,6 @@ opcode_ec:
     KIL
     jmp run_emulator
 
-opcode_ed:
-    KIL
-    jmp run_emulator
-
 opcode_ee:
     KIL
     jmp run_emulator
@@ -1378,10 +1334,6 @@ opcode_fc:
     KIL
     jmp run_emulator
 
-opcode_fd:
-    KIL
-    jmp run_emulator
-
 opcode_fe:
     KIL
     jmp run_emulator
@@ -1389,6 +1341,23 @@ opcode_fe:
 opcode_ff:
     KIL
     jmp run_emulator
+
+    ; ------------------------ undefined ----------------------
+
+opcode_08:
+opcode_10:
+opcode_18:
+opcode_20:
+opcode_28:
+opcode_30:
+opcode_38:
+opcode_cb:
+opcode_d9:
+opcode_dd:
+opcode_ed:
+opcode_fd:
+    bput 0, undefined_len, undefined
+    rts
 
 ; --------------------------------------------------------------------------
 
@@ -1441,6 +1410,10 @@ banner_len = *-banner
 halted:
     dta 'Emulator was halted.', $9b
 halted_len = * - halted
+
+undefined:
+    dta 'Undefined opcode encountered.', $9b
+undefined_len = *-undefined
 
 ; --------------------------------------------------------------------------
 
