@@ -20,7 +20,9 @@ RMARGN = $53
 ROWCRS = $54
 COLCRS = $55
 
-PORTB = $d30b
+COLOR2 = $02c6
+
+PORTB = $d301
 
 CCP   = $e400
 BDOS  = $ec00
@@ -81,9 +83,14 @@ CF_FLAG = %00000001
 
 ; We just assume we are on a 130XE for now. atari800 -xe 8080.xex
 
-    org $d301
+    org $0600
 
-    .byte BANK0
+set_bank0:
+    lda #BANK0
+    sta PORTB
+    rts
+
+    ini set_bank0
 
 ; setup low mem
 
@@ -106,9 +113,14 @@ CF_FLAG = %00000001
 
 ; Load BDOS, we don't need CCP for now.
 
-    org $d301
+    org $0680
 
-    .byte BANK3
+set_bank3:
+    lda #BANK3
+    sta PORTB
+    rts
+
+    ini set_bank3
 
     org $4000+(BDOS&$3fff)  ; in bank 3
 
@@ -120,13 +132,6 @@ CF_FLAG = %00000001
     org $4000+(BIOS&$3fff)  ; in bank 3
 
     ins 'cpm22/bios.sys'
-
-; --------------------------------------------------------------------------
-
-    org $d301
-
-    .byte NOBANK            ; start with extended banks disabled for
-                            ; debugging purposes
 
 ; --------------------------------------------------------------------------
 
@@ -206,772 +211,1032 @@ trampoline = *+1
 
 ; --------------------------------------------------------------------------
 
+    .macro KIL           ; used to stop 6502 emulation and jump to debugger   
+        dta 2
+    .endm
+
 opcode_00:
+    KIL
     jmp run_emulator
 
 opcode_01:
+    KIL
     jmp run_emulator
 
 opcode_02:
+    KIL
     jmp run_emulator
 
 opcode_03:
+    KIL
     jmp run_emulator
 
 opcode_04:
+    KIL
     jmp run_emulator
 
 opcode_05:
+    KIL
     jmp run_emulator
 
 opcode_06:
+    KIL
     jmp run_emulator
 
 opcode_07:
+    KIL
     jmp run_emulator
 
 opcode_08:
+    KIL
     jmp run_emulator
 
 opcode_09:
+    KIL
     jmp run_emulator
 
 opcode_0a:
+    KIL
     jmp run_emulator
 
 opcode_0b:
+    KIL
     jmp run_emulator
 
 opcode_0c:
+    KIL
     jmp run_emulator
 
 opcode_0d:
+    KIL
     jmp run_emulator
 
 opcode_0e:
+    KIL
     jmp run_emulator
 
 opcode_0f:
+    KIL
     jmp run_emulator
 
 opcode_10:
+    KIL
     jmp run_emulator
 
 opcode_11:
+    KIL
     jmp run_emulator
 
 opcode_12:
+    KIL
     jmp run_emulator
 
 opcode_13:
+    KIL
     jmp run_emulator
 
 opcode_14:
+    KIL
     jmp run_emulator
 
 opcode_15:
+    KIL
     jmp run_emulator
 
 opcode_16:
+    KIL
     jmp run_emulator
 
 opcode_17:
+    KIL
     jmp run_emulator
 
 opcode_18:
+    KIL
     jmp run_emulator
 
 opcode_19:
+    KIL
     jmp run_emulator
 
 opcode_1a:
+    KIL
     jmp run_emulator
 
 opcode_1b:
+    KIL
     jmp run_emulator
 
 opcode_1c:
+    KIL
     jmp run_emulator
 
 opcode_1d:
+    KIL
     jmp run_emulator
 
 opcode_1e:
+    KIL
     jmp run_emulator
 
 opcode_1f:
+    KIL
     jmp run_emulator
 
 opcode_20:
+    KIL
     jmp run_emulator
 
 opcode_21:
+    KIL
     jmp run_emulator
 
 opcode_22:
+    KIL
     jmp run_emulator
 
 opcode_23:
+    KIL
     jmp run_emulator
 
 opcode_24:
+    KIL
     jmp run_emulator
 
 opcode_25:
+    KIL
     jmp run_emulator
 
 opcode_26:
+    KIL
     jmp run_emulator
 
 opcode_27:
+    KIL
     jmp run_emulator
 
 opcode_28:
+    KIL
     jmp run_emulator
 
 opcode_29:
+    KIL
     jmp run_emulator
 
 opcode_2a:
+    KIL
     jmp run_emulator
 
 opcode_2b:
+    KIL
     jmp run_emulator
 
 opcode_2c:
+    KIL
     jmp run_emulator
 
 opcode_2d:
+    KIL
     jmp run_emulator
 
 opcode_2e:
+    KIL
     jmp run_emulator
 
 opcode_2f:
+    KIL
     jmp run_emulator
 
 opcode_30:
+    KIL
     jmp run_emulator
 
 opcode_31:
+    KIL
     jmp run_emulator
 
 opcode_32:
+    KIL
     jmp run_emulator
 
 opcode_33:
+    KIL
     jmp run_emulator
 
 opcode_34:
+    KIL
     jmp run_emulator
 
 opcode_35:
+    KIL
     jmp run_emulator
 
 opcode_36:
+    KIL
     jmp run_emulator
 
 opcode_37:
+    KIL
     jmp run_emulator
 
 opcode_38:
+    KIL
     jmp run_emulator
 
 opcode_39:
+    KIL
     jmp run_emulator
 
 opcode_3a:
+    KIL
     jmp run_emulator
 
 opcode_3b:
+    KIL
     jmp run_emulator
 
 opcode_3c:
+    KIL
     jmp run_emulator
 
 opcode_3d:
+    KIL
     jmp run_emulator
 
 opcode_3e:
+    KIL
     jmp run_emulator
 
 opcode_3f:
+    KIL
     jmp run_emulator
 
 opcode_40:
+    KIL
     jmp run_emulator
 
 opcode_41:
+    KIL
     jmp run_emulator
 
 opcode_42:
+    KIL
     jmp run_emulator
 
 opcode_43:
+    KIL
     jmp run_emulator
 
 opcode_44:
+    KIL
     jmp run_emulator
 
 opcode_45:
+    KIL
     jmp run_emulator
 
 opcode_46:
+    KIL
     jmp run_emulator
 
 opcode_47:
+    KIL
     jmp run_emulator
 
 opcode_48:
+    KIL
     jmp run_emulator
 
 opcode_49:
+    KIL
     jmp run_emulator
 
 opcode_4a:
+    KIL
     jmp run_emulator
 
 opcode_4b:
+    KIL
     jmp run_emulator
 
 opcode_4c:
+    KIL
     jmp run_emulator
 
 opcode_4d:
+    KIL
     jmp run_emulator
 
 opcode_4e:
+    KIL
     jmp run_emulator
 
 opcode_4f:
+    KIL
     jmp run_emulator
 
 opcode_50:
+    KIL
     jmp run_emulator
 
 opcode_51:
+    KIL
     jmp run_emulator
 
 opcode_52:
+    KIL
     jmp run_emulator
 
 opcode_53:
+    KIL
     jmp run_emulator
 
 opcode_54:
+    KIL
     jmp run_emulator
 
 opcode_55:
+    KIL
     jmp run_emulator
 
 opcode_56:
+    KIL
     jmp run_emulator
 
 opcode_57:
+    KIL
     jmp run_emulator
 
 opcode_58:
+    KIL
     jmp run_emulator
 
 opcode_59:
+    KIL
     jmp run_emulator
 
 opcode_5a:
+    KIL
     jmp run_emulator
 
 opcode_5b:
+    KIL
     jmp run_emulator
 
 opcode_5c:
+    KIL
     jmp run_emulator
 
 opcode_5d:
+    KIL
     jmp run_emulator
 
 opcode_5e:
+    KIL
     jmp run_emulator
 
 opcode_5f:
+    KIL
     jmp run_emulator
 
 opcode_60:
+    KIL
     jmp run_emulator
 
 opcode_61:
+    KIL
     jmp run_emulator
 
 opcode_62:
+    KIL
     jmp run_emulator
 
 opcode_63:
+    KIL
     jmp run_emulator
 
 opcode_64:
+    KIL
     jmp run_emulator
 
 opcode_65:
+    KIL
     jmp run_emulator
 
 opcode_66:
+    KIL
     jmp run_emulator
 
 opcode_67:
+    KIL
     jmp run_emulator
 
 opcode_68:
+    KIL
     jmp run_emulator
 
 opcode_69:
+    KIL
     jmp run_emulator
 
 opcode_6a:
+    KIL
     jmp run_emulator
 
 opcode_6b:
+    KIL
     jmp run_emulator
 
 opcode_6c:
+    KIL
     jmp run_emulator
 
 opcode_6d:
+    KIL
     jmp run_emulator
 
 opcode_6e:
+    KIL
     jmp run_emulator
 
 opcode_6f:
+    KIL
     jmp run_emulator
 
 opcode_70:
+    KIL
     jmp run_emulator
 
 opcode_71:
+    KIL
     jmp run_emulator
 
 opcode_72:
+    KIL
     jmp run_emulator
 
 opcode_73:
+    KIL
     jmp run_emulator
 
 opcode_74:
+    KIL
     jmp run_emulator
 
 opcode_75:
+    KIL
     jmp run_emulator
 
 opcode_76:
+    KIL
     jmp run_emulator
 
 opcode_77:
+    KIL
     jmp run_emulator
 
 opcode_78:
+    KIL
     jmp run_emulator
 
 opcode_79:
+    KIL
     jmp run_emulator
 
 opcode_7a:
+    KIL
     jmp run_emulator
 
 opcode_7b:
+    KIL
     jmp run_emulator
 
 opcode_7c:
+    KIL
     jmp run_emulator
 
 opcode_7d:
+    KIL
     jmp run_emulator
 
 opcode_7e:
+    KIL
     jmp run_emulator
 
 opcode_7f:
+    KIL
     jmp run_emulator
 
 opcode_80:
+    KIL
     jmp run_emulator
 
 opcode_81:
+    KIL
     jmp run_emulator
 
 opcode_82:
+    KIL
     jmp run_emulator
 
 opcode_83:
+    KIL
     jmp run_emulator
 
 opcode_84:
+    KIL
     jmp run_emulator
 
 opcode_85:
+    KIL
     jmp run_emulator
 
 opcode_86:
+    KIL
     jmp run_emulator
 
 opcode_87:
+    KIL
     jmp run_emulator
 
 opcode_88:
+    KIL
     jmp run_emulator
 
 opcode_89:
+    KIL
     jmp run_emulator
 
 opcode_8a:
+    KIL
     jmp run_emulator
 
 opcode_8b:
+    KIL
     jmp run_emulator
 
 opcode_8c:
+    KIL
     jmp run_emulator
 
 opcode_8d:
+    KIL
     jmp run_emulator
 
 opcode_8e:
+    KIL
     jmp run_emulator
 
 opcode_8f:
+    KIL
     jmp run_emulator
 
 opcode_90:
+    KIL
     jmp run_emulator
 
 opcode_91:
+    KIL
     jmp run_emulator
 
 opcode_92:
+    KIL
     jmp run_emulator
 
 opcode_93:
+    KIL
     jmp run_emulator
 
 opcode_94:
+    KIL
     jmp run_emulator
 
 opcode_95:
+    KIL
     jmp run_emulator
 
 opcode_96:
+    KIL
     jmp run_emulator
 
 opcode_97:
+    KIL
     jmp run_emulator
 
 opcode_98:
+    KIL
     jmp run_emulator
 
 opcode_99:
+    KIL
     jmp run_emulator
 
 opcode_9a:
+    KIL
     jmp run_emulator
 
 opcode_9b:
+    KIL
     jmp run_emulator
 
 opcode_9c:
+    KIL
     jmp run_emulator
 
 opcode_9d:
+    KIL
     jmp run_emulator
 
 opcode_9e:
+    KIL
     jmp run_emulator
 
 opcode_9f:
+    KIL
     jmp run_emulator
 
 opcode_a0:
+    KIL
     jmp run_emulator
 
 opcode_a1:
+    KIL
     jmp run_emulator
 
 opcode_a2:
+    KIL
     jmp run_emulator
 
 opcode_a3:
+    KIL
     jmp run_emulator
 
 opcode_a4:
+    KIL
     jmp run_emulator
 
 opcode_a5:
+    KIL
     jmp run_emulator
 
 opcode_a6:
+    KIL
     jmp run_emulator
 
 opcode_a7:
+    KIL
     jmp run_emulator
 
 opcode_a8:
+    KIL
     jmp run_emulator
 
 opcode_a9:
+    KIL
     jmp run_emulator
 
 opcode_aa:
+    KIL
     jmp run_emulator
 
 opcode_ab:
+    KIL
     jmp run_emulator
 
 opcode_ac:
+    KIL
     jmp run_emulator
 
 opcode_ad:
+    KIL
     jmp run_emulator
 
 opcode_ae:
+    KIL
     jmp run_emulator
 
 opcode_af:
+    KIL
     jmp run_emulator
 
 opcode_b0:
+    KIL
     jmp run_emulator
 
 opcode_b1:
+    KIL
     jmp run_emulator
 
 opcode_b2:
+    KIL
     jmp run_emulator
 
 opcode_b3:
+    KIL
     jmp run_emulator
 
 opcode_b4:
+    KIL
     jmp run_emulator
 
 opcode_b5:
+    KIL
     jmp run_emulator
 
 opcode_b6:
+    KIL
     jmp run_emulator
 
 opcode_b7:
+    KIL
     jmp run_emulator
 
 opcode_b8:
+    KIL
     jmp run_emulator
 
 opcode_b9:
+    KIL
     jmp run_emulator
 
 opcode_ba:
+    KIL
     jmp run_emulator
 
 opcode_bb:
+    KIL
     jmp run_emulator
 
 opcode_bc:
+    KIL
     jmp run_emulator
 
 opcode_bd:
+    KIL
     jmp run_emulator
 
 opcode_be:
+    KIL
     jmp run_emulator
 
 opcode_bf:
+    KIL
     jmp run_emulator
 
 opcode_c0:
+    KIL
     jmp run_emulator
 
 opcode_c1:
+    KIL
     jmp run_emulator
 
 opcode_c2:
+    KIL
     jmp run_emulator
 
 opcode_c3:
+    KIL
     jmp run_emulator
 
 opcode_c4:
+    KIL
     jmp run_emulator
 
 opcode_c5:
+    KIL
     jmp run_emulator
 
 opcode_c6:
+    KIL
     jmp run_emulator
 
 opcode_c7:
+    KIL
     jmp run_emulator
 
 opcode_c8:
+    KIL
     jmp run_emulator
 
 opcode_c9:
+    KIL
     jmp run_emulator
 
 opcode_ca:
+    KIL
     jmp run_emulator
 
 opcode_cb:
+    KIL
     jmp run_emulator
 
 opcode_cc:
+    KIL
     jmp run_emulator
 
 opcode_cd:
+    KIL
     jmp run_emulator
 
 opcode_ce:
+    KIL
     jmp run_emulator
 
 opcode_cf:
+    KIL
     jmp run_emulator
 
 opcode_d0:
+    KIL
     jmp run_emulator
 
 opcode_d1:
+    KIL
     jmp run_emulator
 
 opcode_d2:
+    KIL
     jmp run_emulator
 
 opcode_d3:
+    KIL
     jmp run_emulator
 
 opcode_d4:
+    KIL
     jmp run_emulator
 
 opcode_d5:
+    KIL
     jmp run_emulator
 
 opcode_d6:
+    KIL
     jmp run_emulator
 
 opcode_d7:
+    KIL
     jmp run_emulator
 
 opcode_d8:
+    KIL
     jmp run_emulator
 
 opcode_d9:
+    KIL
     jmp run_emulator
 
 opcode_da:
+    KIL
     jmp run_emulator
 
 opcode_db:
+    KIL
     jmp run_emulator
 
 opcode_dc:
+    KIL
     jmp run_emulator
 
 opcode_dd:
+    KIL
     jmp run_emulator
 
 opcode_de:
+    KIL
     jmp run_emulator
 
 opcode_df:
+    KIL
     jmp run_emulator
 
 opcode_e0:
+    KIL
     jmp run_emulator
 
 opcode_e1:
+    KIL
     jmp run_emulator
 
 opcode_e2:
+    KIL
     jmp run_emulator
 
 opcode_e3:
+    KIL
     jmp run_emulator
 
 opcode_e4:
+    KIL
     jmp run_emulator
 
 opcode_e5:
+    KIL
     jmp run_emulator
 
 opcode_e6:
+    KIL
     jmp run_emulator
 
 opcode_e7:
+    KIL
     jmp run_emulator
 
 opcode_e8:
+    KIL
     jmp run_emulator
 
 opcode_e9:
+    KIL
     jmp run_emulator
 
 opcode_ea:
+    KIL
     jmp run_emulator
 
 opcode_eb:
+    KIL
     jmp run_emulator
 
 opcode_ec:
+    KIL
     jmp run_emulator
 
 opcode_ed:
+    KIL
     jmp run_emulator
 
 opcode_ee:
+    KIL
     jmp run_emulator
 
 opcode_ef:
+    KIL
     jmp run_emulator
 
 opcode_f0:
+    KIL
     jmp run_emulator
 
 opcode_f1:
+    KIL
     jmp run_emulator
 
 opcode_f2:
+    KIL
     jmp run_emulator
 
 opcode_f3:
+    KIL
     jmp run_emulator
 
 opcode_f4:
+    KIL
     jmp run_emulator
 
 opcode_f5:
+    KIL
     jmp run_emulator
 
 opcode_f6:
+    KIL
     jmp run_emulator
 
 opcode_f7:
+    KIL
     jmp run_emulator
 
 opcode_f8:
+    KIL
     jmp run_emulator
 
 opcode_f9:
+    KIL
     jmp run_emulator
 
 opcode_fa:
+    KIL
     jmp run_emulator
 
 opcode_fb:
+    KIL
     jmp run_emulator
 
 opcode_fc:
+    KIL
     jmp run_emulator
 
 opcode_fd:
+    KIL
     jmp run_emulator
 
 opcode_fe:
+    KIL
     jmp run_emulator
 
 opcode_ff:
+    KIL
     jmp run_emulator
 
 ; --------------------------------------------------------------------------
@@ -982,7 +1247,7 @@ run:
     lda #0
     sta LMARGN
     sta COLCRS
-    sta $02c6
+    sta COLOR2
 
     ; print banner
 
