@@ -1229,36 +1229,63 @@ opcode_9f:
 
     ; ######################### ANA #########################
     ; A = A & val                      [Z,S,P,CY,AC]
+
+    .macro ANA val
+        lda regA
+        and :val
+        tax
+
+        lda regA
+        ora :val
+        and #$08
+        bne @1
+
+        lda regF
+        and #~AF_FLAG
+        bne @2
+
+@1:
+        lda regF
+        ora #AF_FLAG
+
+@2:
+        and #~(SF_FLAG|ZF_FLAG|PF_FLAG|CF_FLAG)     ; clear carry here
+        ora zsp_table,x
+        sta regF
+        stx regA
+    .endm
+
 opcode_a0:
-    KIL
+    ANA regB
     jmp run_emulator
 
 opcode_a1:
-    KIL
+    ANA regC
     jmp run_emulator
 
 opcode_a2:
-    KIL
+    ANA regD
     jmp run_emulator
 
 opcode_a3:
-    KIL
+    ANA regE
     jmp run_emulator
 
 opcode_a4:
-    KIL
+    ANA regH
     jmp run_emulator
 
 opcode_a5:
-    KIL
+    ANA regL
     jmp run_emulator
 
 opcode_a6:
-    KIL
+    mem_read regL,regH,regM
+    ANA regM
     jmp run_emulator
 
 opcode_a7:
-    KIL
+    ANA regA
     jmp run_emulator
 
     ; ######################### XRA #########################
