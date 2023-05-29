@@ -887,9 +887,9 @@ static void run_emulator(void) {
         case 0x27: // DAA ---- Decimal Adjust Accumulator [Z,S,P,CY,AC]
             uint8_t save_CF = GET_CF();
             t8 = 0;
-            if (((A & 0x0f) > 9) || GET_AF())
+            if (daa_table_cond1[A] || GET_AF())
                 t8 += 0x06;
-            if (((A & 0xf0) > 0x90) || GET_CF() || ((A&0xf0)>=0x90 && (A&0x0f)>9)) {
+            if (daa_table_cond2[A] || GET_CF()) {
                 t8 += 0x60;
                 save_CF = CF_FLAG;
             }

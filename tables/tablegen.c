@@ -439,4 +439,26 @@ enum addressing_mode {\n\
         printf("\n");
     }
     printf("};\n\n");
+
+    printf("static const uint8_t daa_table_cond1[256] = {\n");
+    for (int i=0; i<32; i++) {
+        printf("\t");
+        for (int j=0; j<8; j++) {
+            int y=i*8+j;
+            printf("0x%02x, ", ((y&0x0f)>9));
+        }
+        printf("\n");
+    }
+    printf("};\n\n");
+
+    printf("static const uint8_t daa_table_cond2[256] = {\n");
+    for (int i=0; i<32; i++) {
+        printf("\t");
+        for (int j=0; j<8; j++) {
+            int y=i*8+j;
+            printf("0x%02x, ", ((y&0xf0)>0x90) || ((y&0xf0)>=0x90) && ((y&0x0f)>9));
+        }
+        printf("\n");
+    }
+    printf("};\n\n");
 }
