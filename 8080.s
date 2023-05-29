@@ -313,11 +313,33 @@ opcode_32:  ; STA adr ---- (adr) <- A
     mem_write byte2, byte3, regA
     jmp run_emulator
 
-    ; ------------------------ unimplemented ------------------
+    ; ######################### INX #########################
+    ; INX XY    XY <- XY+1
+
+    .macro _INX regX, regY      ; inx is reserved keyword
+        inc :regY
+        bne no_inc_regX
+        inc :regX
+no_inc_regX
+    .endm
 
 opcode_03:
-    KIL
+    _INX regB,regC
     jmp run_emulator
+
+opcode_13:
+    _INX regD,regE
+    jmp run_emulator
+
+opcode_23:
+    _INX regH,regL
+    jmp run_emulator
+
+opcode_33:
+    _INX SPH,SPL
+    jmp run_emulator
+
+    ; ------------------------ unimplemented ------------------
 
 opcode_04:
     KIL
@@ -368,10 +390,6 @@ opcode_0f:
     jmp run_emulator
 
 opcode_10:
-    KIL
-    jmp run_emulator
-
-opcode_13:
     KIL
     jmp run_emulator
 
@@ -427,10 +445,6 @@ opcode_20:
     KIL
     jmp run_emulator
 
-opcode_23:
-    KIL
-    jmp run_emulator
-
 opcode_24:
     KIL
     jmp run_emulator
@@ -480,10 +494,6 @@ opcode_2f:
     jmp run_emulator
 
 opcode_30:
-    KIL
-    jmp run_emulator
-
-opcode_33:
     KIL
     jmp run_emulator
 
