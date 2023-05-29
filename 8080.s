@@ -513,29 +513,10 @@ opcode_3e:
     MVI regA
     jmp run_emulator
 
-    ; ------------------------ unimplemented ------------------
-
-opcode_07:
-    KIL
-    jmp run_emulator
+    ; ######################### DAD #########################
+    ; DAD XY                           HL = HL + XY    [CY]
 
 opcode_09:
-    KIL
-    jmp run_emulator
-
-opcode_0a:
-    KIL
-    jmp run_emulator
-
-opcode_0b:
-    KIL
-    jmp run_emulator
-
-opcode_0f:
-    KIL
-    jmp run_emulator
-
-opcode_17:
     KIL
     jmp run_emulator
 
@@ -543,39 +524,7 @@ opcode_19:
     KIL
     jmp run_emulator
 
-opcode_1a:
-    KIL
-    jmp run_emulator
-
-opcode_1b:
-    KIL
-    jmp run_emulator
-
-opcode_1f:
-    KIL
-    jmp run_emulator
-
-opcode_27:
-    KIL
-    jmp run_emulator
-
 opcode_29:
-    KIL
-    jmp run_emulator
-
-opcode_2a:
-    KIL
-    jmp run_emulator
-
-opcode_2b:
-    KIL
-    jmp run_emulator
-
-opcode_2f:
-    KIL
-    jmp run_emulator
-
-opcode_37:
     KIL
     jmp run_emulator
 
@@ -583,7 +532,35 @@ opcode_39:
     KIL
     jmp run_emulator
 
+    ; ######################### LOAD #########################
+    ;
+opcode_0a:
+    KIL
+    jmp run_emulator
+
+opcode_1a:
+    KIL
+    jmp run_emulator
+
+opcode_2a:
+    KIL
+    jmp run_emulator
+
 opcode_3a:
+    KIL
+    jmp run_emulator
+
+    ; ######################### DCX #########################
+    ; DCX XY       XY <- XY-1
+opcode_0b:
+    KIL
+    jmp run_emulator
+
+opcode_1b:
+    KIL
+    jmp run_emulator
+
+opcode_2b:
     KIL
     jmp run_emulator
 
@@ -591,9 +568,26 @@ opcode_3b:
     KIL
     jmp run_emulator
 
+    ; ######################### RRC/RAR/CMA/CMC #########################
+    ;
+opcode_0f:
+    KIL
+    jmp run_emulator
+
+opcode_1f:
+    KIL
+    jmp run_emulator
+
+opcode_2f:
+    KIL
+    jmp run_emulator
+
 opcode_3f:
     KIL
     jmp run_emulator
+
+    ; ######################### MOV #########################
+    ;
 
 opcode_40:
     KIL
@@ -850,6 +844,8 @@ opcode_7f:
     KIL
     jmp run_emulator
 
+    ; ######################### ADD #########################
+    ; A = A + val                      [Z,S,P,CY,AC]
 opcode_80:
     KIL
     jmp run_emulator
@@ -882,6 +878,8 @@ opcode_87:
     KIL
     jmp run_emulator
 
+    ; ######################### ADC #########################
+    ; A = A + val + carry              [Z,S,P,CY,AC]
 opcode_88:
     KIL
     jmp run_emulator
@@ -913,6 +911,9 @@ opcode_8e:
 opcode_8f:
     KIL
     jmp run_emulator
+
+    ; ######################### SUB #########################
+    ; A = A + ~val + !carry             [Z,S,P,CY,AC]
 
 opcode_90:
     KIL
@@ -946,6 +947,9 @@ opcode_97:
     KIL
     jmp run_emulator
 
+    ; ######################### SBB #########################
+    ; A = A + ~val + !carry             [Z,S,P,CY,AC]
+
 opcode_98:
     KIL
     jmp run_emulator
@@ -978,6 +982,8 @@ opcode_9f:
     KIL
     jmp run_emulator
 
+    ; ######################### ANA #########################
+    ; A = A & val                      [Z,S,P,CY,AC]
 opcode_a0:
     KIL
     jmp run_emulator
@@ -1010,6 +1016,9 @@ opcode_a7:
     KIL
     jmp run_emulator
 
+    ; ######################### XRA #########################
+    ; A = A ^ val                      [Z,S,P,CY,AC]
+
 opcode_a8:
     KIL
     jmp run_emulator
@@ -1041,7 +1050,9 @@ opcode_ae:
 opcode_af:
     KIL
     jmp run_emulator
-
+ 
+    ; ######################### ORA #########################
+    ; A = A | val                      [Z,S,P,CY,AC]
 opcode_b0:
     KIL
     jmp run_emulator
@@ -1074,6 +1085,8 @@ opcode_b7:
     KIL
     jmp run_emulator
 
+    ; ######################### CMP #########################
+    ; CMP                              [Z,S,P,CY,AC]
 opcode_b8:
     KIL
     jmp run_emulator
@@ -1106,67 +1119,27 @@ opcode_bf:
     KIL
     jmp run_emulator
 
-opcode_c0:
+    ; ######################### RLC/RAL/DAA/STC #########################
+    ;
+opcode_07:
     KIL
     jmp run_emulator
 
+opcode_17:
+    KIL
+    jmp run_emulator
+
+opcode_27:
+    KIL
+    jmp run_emulator
+
+opcode_37:
+    KIL
+    jmp run_emulator
+
+    ; ######################### POP/PUSH #########################
+    ; POP XY       Y <- (SP); X <- (SP+1); SP <- SP+2
 opcode_c1:
-    KIL
-    jmp run_emulator
-
-opcode_c2:
-    KIL
-    jmp run_emulator
-
-opcode_c3:
-    KIL
-    jmp run_emulator
-
-opcode_c4:
-    KIL
-    jmp run_emulator
-
-opcode_c5:
-    KIL
-    jmp run_emulator
-
-opcode_c6:
-    KIL
-    jmp run_emulator
-
-opcode_c7:
-    KIL
-    jmp run_emulator
-
-opcode_c8:
-    KIL
-    jmp run_emulator
-
-opcode_c9:
-    KIL
-    jmp run_emulator
-
-opcode_ca:
-    KIL
-    jmp run_emulator
-
-opcode_cc:
-    KIL
-    jmp run_emulator
-
-opcode_cd:
-    KIL
-    jmp run_emulator
-
-opcode_ce:
-    KIL
-    jmp run_emulator
-
-opcode_cf:
-    KIL
-    jmp run_emulator
-
-opcode_d0:
     KIL
     jmp run_emulator
 
@@ -1174,115 +1147,7 @@ opcode_d1:
     KIL
     jmp run_emulator
 
-opcode_d2:
-    KIL
-    jmp run_emulator
-
-opcode_d3:
-    KIL
-    jmp run_emulator
-
-opcode_d4:
-    KIL
-    jmp run_emulator
-
-opcode_d5:
-    KIL
-    jmp run_emulator
-
-opcode_d6:
-    KIL
-    jmp run_emulator
-
-opcode_d7:
-    KIL
-    jmp run_emulator
-
-opcode_d8:
-    KIL
-    jmp run_emulator
-
-opcode_da:
-    KIL
-    jmp run_emulator
-
-opcode_db:
-    KIL
-    jmp run_emulator
-
-opcode_dc:
-    KIL
-    jmp run_emulator
-
-opcode_de:
-    KIL
-    jmp run_emulator
-
-opcode_df:
-    KIL
-    jmp run_emulator
-
-opcode_e0:
-    KIL
-    jmp run_emulator
-
 opcode_e1:
-    KIL
-    jmp run_emulator
-
-opcode_e2:
-    KIL
-    jmp run_emulator
-
-opcode_e3:
-    KIL
-    jmp run_emulator
-
-opcode_e4:
-    KIL
-    jmp run_emulator
-
-opcode_e5:
-    KIL
-    jmp run_emulator
-
-opcode_e6:
-    KIL
-    jmp run_emulator
-
-opcode_e7:
-    KIL
-    jmp run_emulator
-
-opcode_e8:
-    KIL
-    jmp run_emulator
-
-opcode_e9:
-    KIL
-    jmp run_emulator
-
-opcode_ea:
-    KIL
-    jmp run_emulator
-
-opcode_eb:
-    KIL
-    jmp run_emulator
-
-opcode_ec:
-    KIL
-    jmp run_emulator
-
-opcode_ee:
-    KIL
-    jmp run_emulator
-
-opcode_ef:
-    KIL
-    jmp run_emulator
-
-opcode_f0:
     KIL
     jmp run_emulator
 
@@ -1290,15 +1155,16 @@ opcode_f1:
     KIL
     jmp run_emulator
 
-opcode_f2:
+    ; PUSH XY      (SP-2) <- Y; (SP-1) <- X; SP <- SP-2
+opcode_c5:
     KIL
     jmp run_emulator
 
-opcode_f3:
+opcode_d5:
     KIL
     jmp run_emulator
 
-opcode_f4:
+opcode_e5:
     KIL
     jmp run_emulator
 
@@ -1306,11 +1172,33 @@ opcode_f5:
     KIL
     jmp run_emulator
 
-opcode_f6:
+    ; ######################### RETCETERA #########################
+    ;
+opcode_c0:
     KIL
     jmp run_emulator
 
-opcode_f7:
+opcode_c8:
+    KIL
+    jmp run_emulator
+
+opcode_d0:
+    KIL
+    jmp run_emulator
+
+opcode_d8:
+    KIL
+    jmp run_emulator
+
+opcode_e0:
+    KIL
+    jmp run_emulator
+
+opcode_e8:
+    KIL
+    jmp run_emulator
+
+opcode_f0:
     KIL
     jmp run_emulator
 
@@ -1318,7 +1206,37 @@ opcode_f8:
     KIL
     jmp run_emulator
 
-opcode_f9:
+opcode_c9: ; RET
+    KIL
+    jmp run_emulator
+
+    ; ######################### JMP #########################
+    ; 
+opcode_c2:
+    KIL
+    jmp run_emulator
+
+opcode_ca:
+    KIL
+    jmp run_emulator
+
+opcode_d2:
+    KIL
+    jmp run_emulator
+
+opcode_da:
+    KIL
+    jmp run_emulator
+
+opcode_e2:
+    KIL
+    jmp run_emulator
+
+opcode_ea:
+    KIL
+    jmp run_emulator
+
+opcode_f2:
     KIL
     jmp run_emulator
 
@@ -1326,7 +1244,37 @@ opcode_fa:
     KIL
     jmp run_emulator
 
-opcode_fb:
+opcode_c3: ; JMP
+    KIL
+    jmp run_emulator
+
+    ; ######################### CALL/RST #########################
+    ;
+opcode_c4:
+    KIL
+    jmp run_emulator
+
+opcode_cc:
+    KIL
+    jmp run_emulator
+
+opcode_d4:
+    KIL
+    jmp run_emulator
+
+opcode_dc:
+    KIL
+    jmp run_emulator
+
+opcode_e4:
+    KIL
+    jmp run_emulator
+
+opcode_ec:
+    KIL
+    jmp run_emulator
+
+opcode_f4:
     KIL
     jmp run_emulator
 
@@ -1334,7 +1282,35 @@ opcode_fc:
     KIL
     jmp run_emulator
 
-opcode_fe:
+opcode_cd:  ; CALL
+    KIL
+    jmp run_emulator
+
+opcode_c7:
+    KIL
+    jmp run_emulator
+
+opcode_cf:
+    KIL
+    jmp run_emulator
+
+opcode_d7:
+    KIL
+    jmp run_emulator
+
+opcode_df:
+    KIL
+    jmp run_emulator
+
+opcode_e7:
+    KIL
+    jmp run_emulator
+
+opcode_ef:
+    KIL
+    jmp run_emulator
+
+opcode_f7:
     KIL
     jmp run_emulator
 
@@ -1342,7 +1318,78 @@ opcode_ff:
     KIL
     jmp run_emulator
 
-    ; ------------------------ undefined ----------------------
+    ; ######################### IMMEDIATE #########################
+    ; func byte2
+opcode_c6:
+    KIL
+    jmp run_emulator
+
+opcode_ce:
+    KIL
+    jmp run_emulator
+
+opcode_d6:
+    KIL
+    jmp run_emulator
+
+opcode_de:
+    KIL
+    jmp run_emulator
+
+opcode_e6:
+    KIL
+    jmp run_emulator
+
+opcode_ee:
+    KIL
+    jmp run_emulator
+
+opcode_f6:
+    KIL
+    jmp run_emulator
+
+opcode_fe:
+    KIL
+    jmp run_emulator
+
+    ; ######################### XTHL/XCHG #########################
+    ;
+opcode_e3:
+    KIL
+    jmp run_emulator
+
+opcode_eb:
+    KIL
+    jmp run_emulator
+
+    ; ######################### PCHL/SPHL #########################
+    ;
+opcode_e9:
+    KIL
+    jmp run_emulator
+opcode_f9:
+    KIL
+    jmp run_emulator
+
+    ; ######################### OUT/IN #########################
+    ;
+opcode_d3:
+    KIL
+    jmp run_emulator
+
+opcode_db:
+    KIL
+    jmp run_emulator
+
+    ; ######################### EI/DI #########################
+    ;
+opcode_f3:
+    KIL
+    jmp run_emulator
+
+opcode_fb:
+    KIL
+    jmp run_emulator
 
 opcode_08:
 opcode_10:
