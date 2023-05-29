@@ -335,9 +335,9 @@ opcode_12:  ; STAX D ---- (DE) <- A
 opcode_22:  ; SHLD adr ---- (adr) <-L;(adr+1) <- H
     mem_write_no_curbank_restore byte2, byte3, regL
     inc byte2
-    bne no_inc_byte3
+    bne @+
     inc byte3
-no_inc_byte3:
+@:
     mem_write byte2, byte3, regH        ; here curbank/PORTB is restored
     jmp run_emulator
 
@@ -552,20 +552,25 @@ opcode_39:
 
     ; ######################### LOAD #########################
     ;
-opcode_0a:
-    KIL
+opcode_0a:  ; LDAX B ---- A <- (BC)
+    mem_read regC, regB, regA
     jmp run_emulator
 
-opcode_1a:
-    KIL
+opcode_1a:  ; LDAX D ---- A <- (DE)
+    mem_read regE, regD, regA
     jmp run_emulator
 
-opcode_2a:
-    KIL
+opcode_2a:  ; LHLD adr ---- L <- (adr);H <- (adr+1)
+    mem_read_no_curbank_restore byte2, byte3, regL
+    inc byte2
+    bne @+
+    inc byte3
+@:
+    mem_read byte2, byte3, regH     ; restores curbank
     jmp run_emulator
 
-opcode_3a:
-    KIL
+opcode_3a:  ; // LDA adr ---- A <- (adr)
+    mem_read byte2, byte3, regA
     jmp run_emulator
 
     ; ######################### DCX #########################
