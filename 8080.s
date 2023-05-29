@@ -70,6 +70,13 @@ instruction = ZP+19     ; do we need this?
 byte2       = ZP+20
 byte3       = ZP+21
 
+SF_FLAG = %10000000
+ZF_FLAG = %01000000
+AF_FLAG = %00010000
+PF_FLAG = %00000100
+ON_FLAG = %00000010     ; always on!
+CF_FLAG = %00000001
+
 ; --------------------------------------------------------------------------
 
 ; We just assume we are on a 130XE for now. atari800 -xe 8080.xex
@@ -996,6 +1003,9 @@ run:
     lda msb_to_bank,x
     sta curbank
     sta PORTB
+
+    lda #ON_FLAG            ; always on, never zeroed (if the code is correct)
+    sta regF
 
     jsr run_emulator
 
