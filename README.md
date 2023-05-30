@@ -13,9 +13,9 @@ run off an Atari drive or a simulated peripheral (SIO2SD, SIDE).
 If you look at the source code, you'll find lots of comments and
 ponderings about how to implement this efficiently in assembly.
 
-First tests with the 6502 core are succesful! More to come.
+First two tests with the 6502 core are succesful! More to come.
 
-![8080pre.png](images/8080pre.png)
+![8080pre.png](images/8080pre.png) ![tst8080.png](images/tst8080.png)
 
 The 8080 core runs all validation sets correctly. Output:
 
