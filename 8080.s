@@ -124,10 +124,10 @@ set_bank0:
     ; because it's larger than 03f00h bytes
 
 ;    ins 'tests/8080PRE.COM'
-;    ins 'tests/TST8080.COM'
+    ins 'tests/TST8080.COM'
 ;    ins 'tests/cputst1.dat'
 ;    ins 'tests/8080EXM.COM'
-    ins 'tests/8080EXMP.COM'     ; patched in reverse order
+;    ins 'tests/8080EXMP.COM'     ; patched in reverse order
 
 ;    org $0640
 ;
@@ -2098,10 +2098,6 @@ undefined:
 undefined_len = *-undefined
 
 ; --------------------------------------------------------------------------
-
-; put tables before banked memory
-
-    org $3000
 
 jump_table_low:
     dta l(opcode_00-1), l(opcode_01-1), l(opcode_02-1), l(opcode_03-1)
