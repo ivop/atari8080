@@ -2057,11 +2057,11 @@ main:
 
 banner:
     dta 'Intel 8080 Emulator for the 130XE', $9b
-    dta 'Copyright (C) 2023 by Ivo van Poorten', $9b
+    dta 'Copyright (C) 2023 by Ivo van Poorten', $9b, $9b
 banner_len = *-banner
 
 halted:
-    dta $9b, 'Emulator was halted.', $9b
+    dta $9b, $9b, 'Emulator was halted.', $9b
 halted_len = * - halted
 
 undefined:
