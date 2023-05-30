@@ -1115,7 +1115,7 @@ opcode_8f:
         eor regA
         eor :val
         and #$10
-        beq @3
+        bne @3
 
         lda regF
         ora #AF_FLAG
@@ -1196,7 +1196,7 @@ opcode_97:
         eor regA
         eor :val
         and #$10
-        beq @3
+        bne @3
 
         lda regF
         ora #AF_FLAG
