@@ -18,6 +18,10 @@ it up tremendously. Chances are I'm going to run BDOS natively, too, (not just
 BIOS) and use CP/M 65 for that with a wrapper that transforms the BDOS
 calls and return values. Perhaps even run the whole emulator on CP/M 65?  
 
+After some hours of debugging, first tests with the 6502 core are succesful!
+
+![8080pre.png](images/8080pre.png)
+
 The 8080 core runs all validation sets correctly. Output:
 
 ```
