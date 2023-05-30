@@ -1,22 +1,27 @@
 ### Intel 8080 Emulator
 
-This is an Intel 8080 emulator, written in C, with the idea in mind to
-eventually implement the same virtual machine in 6502 assembly for
-the Atari 130XE computer.  
+This repository contains two Intel 8080 emulator. One was written in C
+with the idea in mind to eventually implement the same virtual machine
+in 6502 assembly. If you look at its source code, you'll find lots of
+ponderings and comments on how to efficiently implement it in assembly.
+I also mimics the 16kB extended memory banking of the Atari 130XE.
 
-It implements a minimal BIOS in C by interceping OUT (n),A and runs
-vanilla CP/M 2.2. Terminal handling is done in raw mode, so control
+The second version is the actual 6502 implementation. Currently it runs
+on the Atari 130XE and has a minimal BIOS implementation to run just enough
+of CP/M BDOS to output diagnostic messages to the screen. Future plans are
+to run it on top of CP/M-65 that will take care of all BIOS and BDOS
+functionality.
+
+The C version has a complete BIOS (minus list, reader and punch)
+implementation that is capable of running vanilla CP/M 2.2.
+Terminal handling is done in raw mode, so control
 characters work like expected. Ctrl-X exits the emulator.
-Emulated disk is an IBM 3740 but without sector skew. Eventually it'll
+The emulated disk is an IBM 3740 but without sector skew. Eventually it'll
 run off an Atari drive or a simulated peripheral (SIO2SD, SIDE).  
 
-If you look at the source code, you'll find lots of comments and
-ponderings about how to implement this efficiently in assembly.
+#### Test suites
 
-All four tests with the 6502 core are succesful! Except for the very long
-aluop test. It uses the exact same code as the immediate aluop test, so
-I expect it to work, too. On a real 8080 it takes several hours, so I'll
-let it run overnight.
+All four tests with the 6502 core are succesful!
 
 ![8080pre.png](images/8080pre.png) ![tst8080.png](images/tst8080.png)  
 ![cputest.png](images/cputest.png) ![8080exm.png](images/8080exm.png)  
