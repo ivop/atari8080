@@ -121,7 +121,22 @@ set_bank0:
     ; because it's larger than 03f00h bytes
 
 ;    ins 'tests/8080PRE.COM'
-    ins 'tests/TST8080.COM'
+;    ins 'tests/TST8080.COM'
+
+    ins 'tests/cputst1.dat'
+
+    org $0640
+
+set_bank1:
+    lda #BANK1
+    sta PORTB
+    rts
+
+    ini set_bank1
+
+    org $4000
+
+    ins 'tests/cputst2.dat'
 
 ; --------------------------------------------------------------------------
 
