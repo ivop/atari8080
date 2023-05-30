@@ -5,8 +5,8 @@ eventually implement the same virtual machine in 6502 assembly for
 the Atari 130XE computer.  
 
 It implements a minimal BIOS in C by interceping OUT (n),A and runs
-vanilla CP/M 2.2. There's no proper terminal handling yet. Just plain
-line input that gets fed character by character to the running OS.
+vanilla CP/M 2.2. Terminal handling is done in raw mode, so control
+characters work like expected. Ctrl-X exits the emulator.
 Emulated disk is an IBM 3740 but without sector skew. Eventually it'll
 run off an Atari drive or a simulated peripheral (SIO2SD, SIDE).  
 
