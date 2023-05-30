@@ -10,7 +10,7 @@ characters work like expected. Ctrl-X exits the emulator.
 Emulated disk is an IBM 3740 but without sector skew. Eventually it'll
 run off an Atari drive or a simulated peripheral (SIO2SD, SIDE).  
 
-If you look at the source code, you'll already find lots of comments and
+If you look at the source code, you'll find lots of comments and
 ponderings about how to implement this efficiently in assembly.
 
 First tests with the 6502 core are succesful! More to come.
