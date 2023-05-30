@@ -13,10 +13,13 @@ run off an Atari drive or a simulated peripheral (SIO2SD, SIDE).
 If you look at the source code, you'll find lots of comments and
 ponderings about how to implement this efficiently in assembly.
 
-First three tests with the 6502 core are succesful! More to come.
+All four tests with the 6502 core are succesful! Except for the very long
+aluop test. It uses the exact same code as the immediate aluop test, so
+I expect it to work, too. On a real 8080 it takes several hours, so I'll
+let it run overnight.
 
 ![8080pre.png](images/8080pre.png) ![tst8080.png](images/tst8080.png)  
-![cputest.png](images/cputest.png)
+![cputest.png](images/cputest.png) ![8080exm.png](images/8080exm.png)  
 
 
 The 8080 core runs all validation sets correctly. Output:
