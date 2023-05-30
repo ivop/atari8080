@@ -601,7 +601,7 @@ opcode_2b:
     jmp run_emulator
 
 opcode_3b:
-    DCX SPL,SPH
+    DCX SPH,SPL
     jmp run_emulator
 
     ; ######################### RRC/RAR/CMA/CMC #########################
