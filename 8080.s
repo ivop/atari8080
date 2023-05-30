@@ -1971,14 +1971,12 @@ opcode_db:
     KIL
     jmp run_emulator
 
-    ; ######################### EI/DI #########################
+    ; ######################### DI/EI #########################
     ;
-opcode_f3:
-    KIL
+opcode_f3:  ; DI
     jmp run_emulator
 
-opcode_fb:
-    KIL
+opcode_fb:  ; EI
     jmp run_emulator
 
 opcode_08:
