@@ -122,22 +122,22 @@ set_bank0:
 
 ;    ins 'tests/8080PRE.COM'
 ;    ins 'tests/TST8080.COM'
-    ins 'tests/cputst1.dat'
+;    ins 'tests/cputst1.dat'
 ;    ins 'tests/8080EXM.COM'
-;    ins 'tests/8080EXMP.COM'     ; patched in reverse order
+    ins 'tests/8080EXMP.COM'     ; patched in reverse order
 
-    org $0640
-
-set_bank1:
-    lda #BANK1
-    sta PORTB
-    rts
-
-    ini set_bank1
-
-    org $4000
-
-    ins 'tests/cputst2.dat'
+;    org $0640
+;
+;set_bank1:
+;    lda #BANK1
+;    sta PORTB
+;    rts
+;
+;    ini set_bank1
+;
+;    org $4000
+;
+;    ins 'tests/cputst2.dat'
 
 ; --------------------------------------------------------------------------
 
