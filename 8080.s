@@ -1420,7 +1420,7 @@ opcode_b7:
 
 @3:
         lda regF
-        ora #~AF_FLAG
+        ora #AF_FLAG
 
 @4:
         and #~(SF_FLAG|ZF_FLAG|PF_FLAG)
