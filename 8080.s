@@ -117,9 +117,12 @@ set_bank0:
 
     org $4100           ; 8080 memory at 00100h
 
-    ins 'tests/8080PRE.COM'     ; 8080PRE.COM, TST8080.COM, 8080EXM.COM
-                                ; CPUTEST.COM needs to be split in two
-                                ; because it's larger than 03f00h bytes
+    ; 8080PRE.COM, TST8080.COM, 8080EXM.COM
+    ; CPUTEST.COM needs to be split in two
+    ; because it's larger than 03f00h bytes
+
+;    ins 'tests/8080PRE.COM'
+    ins 'tests/TST8080.COM'
 
 ; --------------------------------------------------------------------------
 
@@ -144,10 +147,6 @@ set_bank3:
     org $4000+(BIOS&$3fff)  ; in bank 3
 
     ins 'cpm22/bios.sys'
-
-; --------------------------------------------------------------------------
-
-; BIOS HERE
 
 ; --------------------------------------------------------------------------
 
@@ -2004,8 +2003,17 @@ list:
 
 conout:
     lda regC
+    cmp #13
+    beq skip
+    cmp #10
+    bne charout
+
+crlf:
+    lda #$9b
+charout:
     sta charbuf
     bput 0, 1, charbuf
+skip:
     ldy #0
     rts
 
