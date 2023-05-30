@@ -2,6 +2,9 @@
 ; Intel 8080 emulator for the Atari 130XE
 ; Copyright © 2023 by Ivo van Poorten
 ;
+; This file is licensed under the terms of the 2-clause BSD license. Please
+; see the LICENSE file in the root project directory for the full text.
+;
 ; mads assembler format
 
 ; bit 0 ROM, 0 = off, 1 = on

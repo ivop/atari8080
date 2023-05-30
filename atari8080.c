@@ -4,6 +4,9 @@
 //
 // Copyright © 2023 by Ivo van poorten
 //
+// This file is licensed under the terms of the 2-clause BSD license. Please
+// see the LICENSE file in the root project directory for the full text.
+//
 // Written with the idea in mind to implement a 6502 version in assembly
 // for the Atari 130XE, where reading and writing memory is expensive as
 // it has to bank in the right bank and has a window of 16kB.
