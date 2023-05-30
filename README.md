@@ -1,6 +1,6 @@
 ### Intel 8080 Emulator
 
-This repository contains two Intel 8080 emulator. One was written in C
+This repository contains two Intel 8080 emulators. One was written in C
 with the idea in mind to eventually implement the same virtual machine
 in 6502 assembly. If you look at its source code, you'll find lots of
 ponderings and comments on how to efficiently implement it in assembly.
