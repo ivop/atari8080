@@ -105,10 +105,9 @@ set_bank0:
 
     org $4000           ; 8080 memory at 00000h, bank 0
 
-    .byte 0
-    .byte 0
-
     .byte 0x76          ; HALT if WBOOT is called
+    .byte 0
+    .byte 0
     .word 0
     .byte 0xc3          ; JMP
     .word BDOSE
