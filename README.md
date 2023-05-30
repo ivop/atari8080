@@ -19,6 +19,11 @@ characters work like expected. Ctrl-X exits the emulator.
 The emulated disk is an IBM 3740 but without sector skew. Eventually it'll
 run off an Atari drive or a simulated peripheral (SIO2SD, SIDE).  
 
+#### Assemble from source
+
+To assembly 8080.s into a binary you need the MADS Assembler which can be
+found here: (https://github.com/tebe6502/Mad-Assembler/).  
+
 #### Test suites
 
 All four tests with the 6502 core are succesful!
