@@ -2012,8 +2012,16 @@ list:
 
 conout:
     lda regC
+    beq skip        ; CPUTEST.COM sends six zeroes, confirmed with atari8080.c
     cmp #13
     beq skip
+    cmp #7
+    bne nobell      ; CPUTEST.COM sends bell before and after timing
+
+    lda #253        ; We have a buzzer!
+    bne charout
+
+nobell:
     cmp #10
     bne charout
 
