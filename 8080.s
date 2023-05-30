@@ -1464,13 +1464,10 @@ opcode_bf:
     ; ######################### RLC/RAL/DAA/STC #########################
     ;
 opcode_07:  ; RLC ---- A = A << 1;bit 0 = prev bit 7;CY = prev bit 7 [CY]
-    clc
-    rol regA
-    lda regA
-    adc #1
-    sta regA
+    asl regA
     bcc @1
 
+    inc regA
     lda regF
     ora #CF_FLAG
     bne @2
