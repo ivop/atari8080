@@ -22,7 +22,7 @@ run off an Atari drive or a simulated peripheral (SIO2SD, SIDE).
 #### Assemble from source
 
 To assembly 8080.s into a binary you need the MADS Assembler which can be
-found here: (https://github.com/tebe6502/Mad-Assembler/).  
+found here: https://github.com/tebe6502/Mad-Assembler/ 
 
 #### Test suites
 
