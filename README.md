@@ -24,6 +24,49 @@ run off an Atari drive or a simulated peripheral (SIO2SD, SIDE).
 To assembly 8080.s into a binary you need the MADS Assembler which can be
 found here: https://github.com/tebe6502/Mad-Assembler/ 
 
+#### Future work
+
+##### Source to source translator
+
+We could use the instruction emulation code to implement a 8080 to 6502
+source to source transloter. Each 8080 opcode is replaced by the
+equivalent in 6502 instructions. We won't be using the extended memory
+banks anymore, so memory access will also be faster. We do need a proper
+(dis)assembly listing of the source program. One where data and code
+is cleanly separated. Some constructs will need manual intervention,
+like call 5 to access BDOS in CP/M or checks for the upper limit of the
+TPA area by checking where BDOS starts. It has to be replaced by the CP/M-65
+equivalent.
+
+##### Dynamic recompiler
+
+Right now, for a lot of instructions,
+the overhead of the instruction dispatcher is huge.
+For example, all MOV instructions, except when M is involved, are just
+a single lda and a single sta in 6502 assembly.
+Add to that at least 12 instructions for the instruction fetcher,
+and it's obvious that that's a huge factor in slowing down the emulation.
+It would be nice if all single byte 8080 instructions, except for those
+that change the Program Counter, could be executed in a single go.
+The setup time will be higher, but overall it should be faster if enough
+of these instructions are executed after eachother.
+The main loop could be something like:
+
+* Fetch instruction, see if it's multibyte or changes the PC.
+* If so, execute precompiled area, execute fetched instruction and loop.
+* If it's a single byte instruction and does not change the PC,
+copy all the 6502
+code between ``opcode_xx:`` and ``opcode_xx_end`` (excluding the jmp loop)
+to a so called recompiled area (somewhere in memory, growing upwards).
+* If the recompiled area overflows, execute all recompiled instructions in
+one go and start over.
+* Loop to fetch instruction.
+
+Multi-byte instructions are problematic because while we execute the
+recompiled 6502 code, we do not know where to get them from the extended
+memory. Perhaps the emulation code could be changed to include immediate load instructions for the values that are normally accessed as byte2 and byte3,
+and have them patched in by the recompiler. Food for thought.
+ 
 #### Test suites
 
 All four tests with the 6502 core are succesful!
