@@ -36,7 +36,10 @@ banks anymore, so memory access will also be faster. We do need a proper
 is cleanly separated. Some constructs will need manual intervention,
 like call 5 to access BDOS in CP/M or checks for the upper limit of the
 TPA area by checking where BDOS starts. It has to be replaced by the CP/M-65
-equivalent.
+equivalent. After translation, the 6502 code could be run through a
+peephole optimizer to remove redundant loads and stores. Another
+possibility is to remove flag calculation code if the flags are changed
+afterwards before they are evaluated by one of the jump instructions.
 
 ##### Dynamic recompiler
 
