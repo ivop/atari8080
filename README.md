@@ -29,7 +29,7 @@ found here: https://github.com/tebe6502/Mad-Assembler/
 ##### Source to source translator
 
 We could use the instruction emulation code to implement a 8080 to 6502
-source to source transloter. Each 8080 opcode is replaced by the
+source to source translator. Each 8080 opcode is replaced by the
 equivalent in 6502 instructions. We won't be using the extended memory
 banks anymore, so memory access will also be faster. We do need a proper
 (dis)assembly listing of the source program. One where data and code
