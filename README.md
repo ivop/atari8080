@@ -4,7 +4,7 @@ This repository contains two Intel 8080 emulators. One was written in C
 with the idea in mind to eventually implement the same virtual machine
 in 6502 assembly. If you look at its source code, you'll find lots of
 ponderings and comments on how to efficiently implement it in assembly.
-I also mimics the 16kB extended memory banking of the Atari 130XE.
+It also mimics the 16kB extended memory banking of the Atari 130XE.
 
 The second version is the actual 6502 implementation. Currently it runs
 on the Atari 130XE and has a minimal BIOS implementation to run just enough
