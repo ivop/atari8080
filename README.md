@@ -50,7 +50,7 @@ a single lda and a single sta in 6502 assembly.
 Add to that at least 12 instructions for the instruction fetcher,
 and it's obvious that that's a huge factor in slowing down the emulation.
 It would be nice if multiple instructions could be executed after
-eachother without the dispatcher slowing it. However, the setup time
+eachother without the dispatcher slowing it down. However, the setup time
 and maintaining a cache of recompiled instructions as to not having to
 recompile them over and over again might become problematic and not
 worth the effort.
