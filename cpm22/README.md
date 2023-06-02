@@ -1,3 +1,7 @@
+atari8080: added a Makefile and a dummy BIOS which triggers the emulator
+with OUT (n),A calls to handle BIOS calls. You need 'asl' to assemble
+the binaries yourself.  
+
 # cpm22 - source code for CP/M 2.2 CCP and BDOS
 
 Hosted at the
