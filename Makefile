@@ -30,8 +30,8 @@ disk.img: Makefile
 tables/tables.h: tables/tablegen tables/tablegen.c
 	$(MAKE) -C tables tables.h
 
-8080.xex: 8080.s cio.s tables/tables.s
-	mads -o:8080.xex 8080.s
+8080.xex: 8080.s cio.s tables/tables.s Makefile
+	mads -d:TEST=1 -o:8080.xex 8080.s
 
 tables/tables.s: tables/tablegen2 tables/tablegen2.c
 	$(MAKE) -C tables tables.s

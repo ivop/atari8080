@@ -16,6 +16,10 @@
 
 ; set to $fe at boot (basic enabled), $ff basic disabled
 
+; Needed for standalone test
+
+.ifdef TEST
+
     icl 'cio.s'
 
 LMARGN = $52
@@ -24,6 +28,8 @@ ROWCRS = $54
 COLCRS = $55
 
 COLOR2 = $02c6
+
+.endif
 
 PORTB = $d301
 
@@ -71,16 +77,14 @@ PCL  = ZP+15
 PCHa = ZP+16     ; keep PC always adjusted for fetch instruction!
 
 curbank  = ZP+17    ; direct PORTB values
-savebank = ZP+18
 
-instruction = ZP+19     ; do we need this?
-byte3       = ZP+20
-byte2       = ZP+21
-byte3a      = ZP+22     ; for SHLD for example (adr)<-L;(adr+1)<-H
+byte3       = ZP+18
+byte2       = ZP+19
+byte3a      = ZP+20     ; for SHLD for example (adr)<-L;(adr+1)<-H
 
-regM    = ZP+23         ; temporary M register, optimize later
-t8      = ZP+24
-saveCF  = ZP+25
+regM    = ZP+21         ; temporary M register, optimize later
+t8      = ZP+22
+saveCF  = ZP+23
 
 SF_FLAG = %10000000
 ZF_FLAG = %01000000
@@ -95,7 +99,7 @@ ALL_FLAGS = (SF_FLAG|ZF_FLAG|AF_FLAG|PF_FLAG|ON_FLAG|CF_FLAG)
 
 ; We just assume we are on a 130XE for now. atari800 -xe 8080.xex
 
-    org $0600
+    org $8000
 
 set_bank0:
     lda #BANK0
@@ -123,13 +127,13 @@ set_bank0:
     ; CPUTEST.COM needs to be split in two
     ; because it's larger than 03f00h bytes
 
-;    ins 'tests/8080PRE.COM'
-    ins 'tests/TST8080.COM'
+    ins 'tests/8080PRE.COM'
+;    ins 'tests/TST8080.COM'
 ;    ins 'tests/cputst1.dat'
 ;    ins 'tests/8080EXM.COM'
 ;    ins 'tests/8080EXMP.COM'     ; patched in reverse order
 
-;    org $0640
+;    org $8000
 ;
 ;set_bank1:
 ;    lda #BANK1
@@ -146,7 +150,7 @@ set_bank0:
 
 ; Load BDOS, we don't need CCP for now.
 
-    org $0680
+    org $8000
 
 set_bank3:
     lda #BANK3
@@ -1972,7 +1976,6 @@ opcode_d3:
     jmp run_emulator
 
 opcode_db:
-    KIL
     jmp run_emulator
 
     ; ######################### DI/EI #########################
@@ -1995,10 +1998,17 @@ opcode_d9:
 opcode_dd:
 opcode_ed:
 opcode_fd:
+.ifdef TEST
     bput 0, undefined_len, undefined
+.else
+.endif
     rts
 
 ; --------------------------------------------------------------------------
+
+; Standalone test code
+
+.ifdef TEST
 
 MY_BIOS:
     lda byte2
@@ -2041,8 +2051,6 @@ skip:
 charbuf:
     .byte 0
 
-; --------------------------------------------------------------------------
-
 ; SETUP EMULATOR
 
 main:
@@ -2081,6 +2089,8 @@ main:
     bput 0, halted_len, halted
 
     jmp *
+
+.endif
 
 ; --------------------------------------------------------------------------
 
