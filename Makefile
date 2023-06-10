@@ -24,8 +24,8 @@ atari8080-debug: atari8080.c Makefile disk.img tables/tables.h
 
 disk.img: Makefile
 	dd if=/dev/zero of=disk.img bs=128 count=2002
-	mkfs.cpm -f ibm-3740-noskew disk.img
-	cpmcp -f ibm-3740-noskew disk.img $(CPMFILES) 0:
+	mkfs.cpm -f atarihd disk.img
+	cpmcp -f atarihd disk.img $(CPMFILES) 0:
 
 tables/tables.h: tables/tablegen tables/tablegen.c
 	$(MAKE) -C tables tables.h

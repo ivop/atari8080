@@ -75,11 +75,19 @@ trans:
 
 ; disk parameter block
 
-number_of_tracks = 77
-reserved_tracks = 2
-sectors_per_track = 26
-block_size = 1024
-dirents = 64
+; ibm-3740-noskew
+;number_of_tracks = 77
+;reserved_tracks = 2
+;sectors_per_track = 26
+;block_size = 1024
+;dirents = 64
+
+; atarihd
+number_of_tracks = 455
+reserved_tracks = 1
+sectors_per_track = 18
+block_size = 2048
+dirents = 128
 
     if block_size = 1024
 block_shift = 3

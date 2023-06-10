@@ -331,7 +331,7 @@ static void bios_entry(int function) {
         break;
 
     case 10:        // settrk
-        track_number = C;
+        track_number = (B<<8) | C;
         break;
 
     case 11:        // setsec
@@ -345,7 +345,7 @@ static void bios_entry(int function) {
         break;
 
     case 13: {      // read
-        int abssec = track_number * 26 + sector_number;
+        int abssec = track_number * 18 + sector_number;
         int adr = dma_address;
         if (fseek(dsk0, abssec*128, SEEK_SET) == EINVAL) {
             A = 1;
