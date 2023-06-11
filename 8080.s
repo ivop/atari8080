@@ -38,6 +38,8 @@ CCPB  = CCP
 BDOS  = $ec00
 BDOSE = BDOS+6
 BIOS  = $fa00
+
+BOOTF  = (BIOS+( 0*3))
 WBOOTF = (BIOS+( 1*3))
 DPBASE = (BIOS+(17*3))
 
@@ -99,6 +101,8 @@ byte3a      = ZP+20     ; for SHLD for example (adr)<-L;(adr+1)<-H
 regM    = ZP+21         ; temporary M register, optimize later
 t8      = ZP+22
 saveCF  = ZP+23
+
+zp_len = 23
 
 SF_FLAG = %10000000
 ZF_FLAG = %01000000
@@ -2318,7 +2322,52 @@ main:
     sta CPM65BIOS+1
     stx CPM65BIOS+2
 
-    jmp *
+    ldx #0
+print_banner:
+    lda banner,x
+    ldy #CPM65_BIOS_CONOUT
+    stx t8
+    jsr CPM65BIOS
+    ldx t8
+    inx
+    cpx #banner_len
+    bne print_banner
+
+    ldx #zp_len
+    lda #0
+clear_zp:
+    sta ZP,x
+    dex
+    bpl clear_zp
+
+    lda #ON_FLAG
+    sta regF
+
+    ldx #<BOOTF             ; start with cold boot
+    stx PCL
+    lda #>BOOTF
+    stx PCH
+    lda msb_to_adjusted,x
+    sta PCHa
+    lda msb_to_bank,x
+    sta curbank
+    sta PORTB
+
+    ldy #0
+    jsr run_emulator
+
+    ldx #0
+print_halted:
+    lda halted,x
+    ldy #CPM65_BIOS_CONOUT
+    stx t8
+    jsr CPM65BIOS
+    ldx t8
+    inx
+    cpx #halted_len
+    bne print_halted
+
+    rts                     ; back to CP/M-65
 
 CPM65BIOS:
     jmp $0000
