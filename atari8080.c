@@ -345,6 +345,7 @@ static void bios_entry(int function) {
         break;
 
     case 13: {      // read
+                    // hardcoded 18 sectors per track for atarihd format
         int abssec = track_number * 18 + sector_number;
         int adr = dma_address;
         if (fseek(dsk0, abssec*128, SEEK_SET) == EINVAL) {
