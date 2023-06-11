@@ -174,11 +174,11 @@ set_bank3:
 
     ini set_bank3
 
-;.ifdef CPM65
+.ifdef CPM65
     org $4000+(CCP&$3fff)   ; in bank 3
 
     ins 'cpm22/ccp.sys'
-;.endif
+.endif
 
     org $4000+(BDOS&$3fff)  ; in bank 3
 
@@ -2122,7 +2122,92 @@ main:
 ; BIOS wrappers here
 
 MY_BIOS:
+    ldx byte2
+    cpx #$11
+    bcs too_high
+
+    lda bios_jump_table_high,x
+    pha
+    lda bios_jump_table_low,x
+    pha
+
+; fallthrough, call our BIOS wrapper
+
+too_high:           ; just ignore
     rts
+
+bios_00:    ; BOOT
+
+; fallthrough
+
+bios_01:    ; WBOOT
+    rts
+
+bios_02:    ; CONST
+    rts
+
+bios_03:    ; CONIN
+    rts
+
+bios_04:    ; CONOUT
+    rts
+
+bios_05:    ; LIST
+bios_06:    ; PUNCH
+    rts
+
+bios_07:    ; READER
+    lda #26
+    sta regA
+    rts
+
+bios_08:    ; HOME
+    rts
+
+bios_09:    ; SELDSK
+    rts
+
+bios_0a:    ; SETTRK
+    rts
+
+bios_0b:    ; SETSEC
+    rts
+
+bios_0c:    ; SETDMA
+    rts
+
+bios_0d:    ; READ
+    rts
+
+bios_0e:    ; WRITE
+    rts
+
+bios_0f:    ; LISTST
+    lda #$ff
+    sta regA
+    rts
+
+bios_10:    ; SECTRAN
+    lda regC
+    sta regA
+    lda regB
+    sta regH
+    lda regC
+    sta regL
+    rts
+
+bios_jump_table_low:
+    dta l(bios_00), l(bios_01), l(bios_02), l(bios_03)
+    dta l(bios_04), l(bios_05), l(bios_06), l(bios_07)
+    dta l(bios_08), l(bios_09), l(bios_0a), l(bios_0b)
+    dta l(bios_0c), l(bios_0d), l(bios_0e), l(bios_0f)
+    dta l(bios_10)
+bios_jump_table_high:
+    dta h(bios_00), h(bios_01), h(bios_02), h(bios_03)
+    dta h(bios_04), h(bios_05), h(bios_06), h(bios_07)
+    dta h(bios_08), h(bios_09), h(bios_0a), h(bios_0b)
+    dta h(bios_0c), h(bios_0d), h(bios_0e), h(bios_0f)
+    dta h(bios_10)
 
 ; Entry point from CP/M-65. Enter with A=lsb X=msb of BIOS entrypoint
 
