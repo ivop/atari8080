@@ -315,7 +315,7 @@ static void bios_entry(int function) {
         A = 26;     // return ^Z EOF
         break;
 
-    case 8:         // settrk
+    case 8:         // home
         track_number = 0;
         C = 0;
         break;
