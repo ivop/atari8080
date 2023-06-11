@@ -40,10 +40,21 @@ BIOS  = $fa00
 
 NOBANK = $ff
 
+.ifdef TEST
+; OS ROM on, BASIC off
 BANK0 = $e3 | $00 | $00
 BANK1 = $e3 | $00 | $04
 BANK2 = $e3 | $08 | $00
 BANK3 = $e3 | $08 | $04
+.endif
+
+.ifdef CPM65
+; OS ROM off, BASIC off
+BANK0 = $e1 | $00 | $00
+BANK1 = $e1 | $00 | $04
+BANK2 = $e1 | $08 | $00
+BANK3 = $e1 | $08 | $04
+.endif
 
 ; --------------------------------------------------------------------------
 
@@ -119,6 +130,8 @@ set_bank0:
     .byte 0xc3          ; JMP
     .word BDOSE
 
+.ifdef TEST
+
 ; load test program
 
     org $4100           ; 8080 memory at 00100h
@@ -146,9 +159,11 @@ set_bank0:
 ;
 ;    ins 'tests/cputst2.dat'
 
+.endif
+
 ; --------------------------------------------------------------------------
 
-; Load BDOS, we don't need CCP for now.
+; Load BDOS (and CCP, only in CPM65 mode)
 
     org $8000
 
@@ -158,6 +173,12 @@ set_bank3:
     rts
 
     ini set_bank3
+
+;.ifdef CPM65
+    org $4000+(CCP&$3fff)   ; in bank 3
+
+    ins 'cpm22/ccp.sys'
+;.endif
 
     org $4000+(BDOS&$3fff)  ; in bank 3
 
@@ -2000,7 +2021,9 @@ opcode_ed:
 opcode_fd:
 .ifdef TEST
     bput 0, undefined_len, undefined
-.else
+.endif
+.ifdef CPM65
+; print message through BIOS CONOUT
 .endif
     rts
 
@@ -2089,6 +2112,29 @@ main:
     bput 0, halted_len, halted
 
     jmp *
+
+.endif
+
+; --------------------------------------------------------------------------
+
+.ifdef CPM65
+
+; BIOS wrappers here
+
+MY_BIOS:
+    rts
+
+; Entry point from CP/M-65. Enter with A=lsb X=msb of BIOS entrypoint
+
+main:
+    sta CPM65BIOS+1
+    stx CPM65BIOS+2
+
+    jmp *
+
+CPM65BIOS:
+    jsr $0000
+    rts
 
 .endif
 

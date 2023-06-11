@@ -11,7 +11,7 @@ CPMFILES = \
 
 CFLAGS += -O3
 
-all: atari8080 atari8080-debug 8080.xex
+all: atari8080 atari8080-debug 8080.xex 8080.ovl
 
 atari8080: atari8080.c Makefile disk.img tables/tables.h
 	$(CC) $(CFLAGS) -o $@ $< -lm
@@ -32,6 +32,9 @@ tables/tables.h: tables/tablegen tables/tablegen.c
 
 8080.xex: 8080.s cio.s tables/tables.s Makefile
 	mads -d:TEST=1 -o:8080.xex 8080.s
+
+8080.ovl: 8080.s cio.s tables/tables.s Makefile
+	mads -d:CPM65=1 -o:8080.xex 8080.s
 
 tables/tables.s: tables/tablegen2 tables/tablegen2.c
 	$(MAKE) -C tables tables.s
