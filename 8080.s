@@ -34,9 +34,12 @@ COLOR2 = $02c6
 PORTB = $d301
 
 CCP   = $e400
+CCPB  = CCP
 BDOS  = $ec00
 BDOSE = BDOS+6
 BIOS  = $fa00
+WBOOTF = (BIOS+( 1*3))
+DPBASE = (BIOS+(17*3))
 
 NOBANK = $ff
 
@@ -175,6 +178,9 @@ set_bank3:
     ini set_bank3
 
 .ifdef CPM65
+
+; move out of banking window so it can be reloaded during WBOOT
+
     org $4000+(CCP&$3fff)   ; in bank 3
 
     ins 'cpm22/ccp.sys'
@@ -2119,6 +2125,15 @@ main:
 
 .ifdef CPM65
 
+CPM65_BIOS_CONST    = 0
+CPM65_BIOS_CONIN    = 1
+CPM65_BIOS_CONOUT   = 2
+CPM65_BIOS_SELDSK   = 3
+CPM65_BIOS_SETSEC   = 4
+CPM65_BIOS_SETDMA   = 5
+CPM65_BIOS_READ     = 6
+CPM65_BIOS_WRITE    = 7
+
 ; BIOS wrappers here
 
 MY_BIOS:
@@ -2138,18 +2153,60 @@ too_high:           ; just ignore
 
 bios_00:    ; BOOT
 
+; todo: print 64k CP/M vers 2.2
+
+    lda #BANK0
+    sta PORTB
+
+    lda #$c3        ; 8080 JMP instruction
+    sta $4000
+    sta $4005
+    lda #<WBOOTF
+    sta $4001
+    lda #>WBOOTF
+    sta $4002
+    lda #<BDOSE
+    sta $4006
+    lda #>BDOSE
+    sta $4007
+
+    lda curbank
+    sta PORTB
+
 ; fallthrough
 
 bios_01:    ; WBOOT
+
+; todo: copy CCP.SYS (imitate reload)
+
+; todo: clear all registers, set flag to ON_FLAG
+
+; todo: set PC to CPMB, adjust PCHa and set curbank
+
+; todo: C = drive_number
+
+    ldy #0
     rts
 
 bios_02:    ; CONST
+    ldy #CPM65_BIOS_CONST
+    jsr CPM65BIOS
+    sta regA
+    ldy #0
     rts
 
 bios_03:    ; CONIN
+    ldy #CPM65_BIOS_CONIN
+    jsr CPM65BIOS
+    sta regA
+    ldy #0
     rts
 
 bios_04:    ; CONOUT
+    lda regA
+    ldy #CPM65_BIOS_CONOUT
+    jsr CPM65BIOS
+    ldy #0
     rts
 
 bios_05:    ; LIST
@@ -2162,18 +2219,53 @@ bios_07:    ; READER
     rts
 
 bios_08:    ; HOME
+    lda #0
+    sta track_number
+    sta track_number+1
+    sta regC
     rts
 
 bios_09:    ; SELDSK
+    lda #0
+    sta regH
+    sta regL
+    lda regC
+    bne no_such_drive       ; returns 0 in HL
+
+    sta drive_number
+    lda #<DPBASE
+    sta regL
+    lda #>DPBASE
+    sta regH
+
+no_such_drive:
     rts
 
+; We do not call CP/M-65 BIOS for settrk and setsec as settrk is unavailable
+; and setsec needs the absolute sector number. Instead, we calculate the
+; absolute sector number before doing a read or write, and do the appropriate
+; BIOS call there because we do not know in which order the calling program
+; calls settrk and setsec.
+
 bios_0a:    ; SETTRK
+    lda regC
+    sta track_number
+    lda regB
+    sta track_number+1
     rts
 
 bios_0b:    ; SETSEC
+    lda regC
+    sta sector_number
     rts
 
 bios_0c:    ; SETDMA
+    lda regC
+    sta dma_address
+    sta regL
+    lda regB
+    sta dma_address+1
+    sta regH
     rts
 
 bios_0d:    ; READ
@@ -2183,13 +2275,13 @@ bios_0e:    ; WRITE
     rts
 
 bios_0f:    ; LISTST
-    lda #$ff
+    lda #$ff                ; always ready
     sta regA
     rts
 
 bios_10:    ; SECTRAN
     lda regC
-    sta regA
+    sta regA                ; no translation, also return in HL
     lda regB
     sta regH
     lda regC
@@ -2209,6 +2301,17 @@ bios_jump_table_high:
     dta h(bios_0c), h(bios_0d), h(bios_0e), h(bios_0f)
     dta h(bios_10)
 
+drive_number:
+    .byte 0
+track_number:
+    .word 0
+sector_number:
+    .byte 0
+abs_sector_number:
+    .word 0
+dma_address:
+    .word 0
+
 ; Entry point from CP/M-65. Enter with A=lsb X=msb of BIOS entrypoint
 
 main:
@@ -2218,24 +2321,31 @@ main:
     jmp *
 
 CPM65BIOS:
-    jsr $0000
-    rts
+    jmp $0000
 
 .endif
 
 ; --------------------------------------------------------------------------
 
+.ifdef CPM65
+EOL = 10
+.endif
+
+.ifdef TEST
+; EOL = $9b     ; already defined in cio.s
+.endif
+
 banner:
-    dta 'Intel 8080 Emulator for the 130XE', $9b
-    dta 'Copyright (C) 2023 by Ivo van Poorten', $9b, $9b
+    dta 'Intel 8080 Emulator for the 130XE', EOL
+    dta 'Copyright (C) 2023 by Ivo van Poorten', EOL, EOL
 banner_len = *-banner
 
 halted:
-    dta $9b, $9b, 'Emulator was halted.', $9b
+    dta EOL, EOL, 'Emulator was halted.', EOL
 halted_len = * - halted
 
 undefined:
-    dta 'Undefined opcode encountered.', $9b
+    dta 'Undefined opcode encountered.', EOL
 undefined_len = *-undefined
 
 ; --------------------------------------------------------------------------
