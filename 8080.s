@@ -33,8 +33,9 @@ COLOR2 = $02c6
 
 PORTB = $d301
 
+; addresses inside virtual 8080 machine
 CCP   = $e400
-CCPB  = CCP
+CPMB  = CCP
 BDOS  = $ec00
 BDOSE = BDOS+6
 BIOS  = $fa00
@@ -43,10 +44,9 @@ BOOTF  = (BIOS+( 0*3))
 WBOOTF = (BIOS+( 1*3))
 DPBASE = (BIOS+(17*3))
 
-NOBANK = $ff
-
 .ifdef TEST
 ; OS ROM on, BASIC off
+NOBANK = $ff
 BANK0 = $e3 | $00 | $00
 BANK1 = $e3 | $00 | $04
 BANK2 = $e3 | $08 | $00
@@ -55,6 +55,7 @@ BANK3 = $e3 | $08 | $04
 
 .ifdef CPM65
 ; OS ROM off, BASIC off
+NOBANK = $fe
 BANK0 = $e1 | $00 | $00
 BANK1 = $e1 | $00 | $04
 BANK2 = $e1 | $08 | $00
@@ -170,7 +171,7 @@ set_bank0:
 
 ; --------------------------------------------------------------------------
 
-; Load BDOS (and CCP, only in CPM65 mode)
+; Load BDOS
 
     org $8000
 
@@ -180,15 +181,6 @@ set_bank3:
     rts
 
     ini set_bank3
-
-.ifdef CPM65
-
-; move out of banking window so it can be reloaded during WBOOT
-
-    org $4000+(CCP&$3fff)   ; in bank 3
-
-    ins 'cpm22/ccp.sys'
-.endif
 
     org $4000+(BDOS&$3fff)  ; in bank 3
 
@@ -285,7 +277,11 @@ set_bank3:
 ; BIT: The N and V flags are set to match bits 7 and 6 respectively in the
 ; value stored at the tested address.
 
-    org $8000
+; Reserve 128 bytes after the banking window to allow overflow when
+; reading a sector. The number of bytes overflowed need to be copied
+; to the beginning of the next bank.
+
+    org $8080
 
 ; Enter with Y=0!
 
@@ -2157,7 +2153,18 @@ too_high:           ; just ignore
 
 bios_00:    ; BOOT
 
-; todo: print 64k CP/M vers 2.2
+    ldx #0
+print_cpmvers:
+    lda cpmvers,x
+    ldy #CPM65_BIOS_CONOUT
+    stx t8
+    jsr CPM65BIOS
+    ldx t8
+    inx
+    cpx #cpmvers_len
+    bne print_cpmvers
+
+; set CP/M jump vectors in low memory
 
     lda #BANK0
     sta PORTB
@@ -2174,20 +2181,58 @@ bios_00:    ; BOOT
     lda #>BDOSE
     sta $4007
 
-    lda curbank
-    sta PORTB
-
 ; fallthrough
 
 bios_01:    ; WBOOT
 
-; todo: copy CCP.SYS (imitate reload)
+; copy CCP to virtual 8080 memory
 
-; todo: clear all registers, set flag to ON_FLAG
+    lda #BANK3
+    sta PORTB
 
-; todo: set PC to CPMB, adjust PCHa and set curbank
+    ldx #0
+copy_ccp:
+    lda CCP_LOAD_ADDRESS+(0*256),x
+    sta CCP-$8000+(0*256),x
+    lda CCP_LOAD_ADDRESS+(1*256),x
+    sta CCP-$8000+(1*256),x
+    lda CCP_LOAD_ADDRESS+(2*256),x
+    sta CCP-$8000+(2*256),x
+    lda CCP_LOAD_ADDRESS+(3*256),x
+    sta CCP-$8000+(3*256),x
+    lda CCP_LOAD_ADDRESS+(4*256),x
+    sta CCP-$8000+(4*256),x
+    lda CCP_LOAD_ADDRESS+(5*256),x
+    sta CCP-$8000+(5*256),x
+    lda CCP_LOAD_ADDRESS+(6*256),x
+    sta CCP-$8000+(6*256),x
+    lda CCP_LOAD_ADDRESS+(7*256),x
+    sta CCP-$8000+(7*256),x
+    inx
+    bne copy_ccp
 
-; todo: C = drive_number
+    ldx #zp_len
+    lda #0
+clear_zp:
+    sta ZP,x
+    dex
+    bpl clear_zp
+
+    lda #ON_FLAG
+    sta regF
+
+    lda #<CPMB
+    sta PCL
+    ldx #>CPMB
+    stx PCH
+    lda msb_to_adjusted,x
+    sta PCHa
+    lda msb_to_bank,x
+    sta curbank
+    sta PORTB
+
+    lda drive_number
+    sta regC
 
     ldy #0
     rts
@@ -2333,16 +2378,6 @@ print_banner:
     cpx #banner_len
     bne print_banner
 
-    ldx #zp_len
-    lda #0
-clear_zp:
-    sta ZP,x
-    dex
-    bpl clear_zp
-
-    lda #ON_FLAG
-    sta regF
-
     ldx #<BOOTF             ; start with cold boot
     stx PCL
     lda #>BOOTF
@@ -2367,6 +2402,8 @@ print_halted:
     cpx #halted_len
     bne print_halted
 
+    lda #NOBANK
+    sta PORTB
     rts                     ; back to CP/M-65
 
 CPM65BIOS:
@@ -2392,6 +2429,10 @@ banner_len = *-banner
 halted:
     dta EOL, EOL, 'Emulator was halted.', EOL
 halted_len = * - halted
+
+cpmvers:
+    dta 'CP/M vers 2.2', EOL
+cpmvers_len = * - cpmvers
 
 undefined:
     dta 'Undefined opcode encountered.', EOL
@@ -2548,6 +2589,17 @@ msb_to_adjusted:
 ; include instruction_length and zsp_table tables
 
     icl 'tables/tables.s'
+
+; --------------------------------------------------------------------------
+
+; Load CCP outside of virtual 8080 memory so it can be reloaded at will
+
+.ifdef CPM65
+
+CCP_LOAD_ADDRESS:
+    ins 'cpm22/ccp.sys'
+
+.endif
 
 ; --------------------------------------------------------------------------
 
