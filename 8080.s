@@ -295,7 +295,7 @@ run_emulator:
         bne no_inc_pch
             inc PCH         ; each page crossing it's four instructions
             inc PCHa        ; longer
-            bit PCHa
+;            bit PCHa
             bpl no_adjust   ; except for when we are at the end of the bank
                 ldx PCH
                 lda msb_to_bank,x
