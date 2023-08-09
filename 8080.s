@@ -289,18 +289,6 @@ set_bank3:
 ; returning here!
 
 run_emulator:
-    lda (PCL),y                 ; retrieve instruction
-
-    tax                         ; set trampoline
-    lda jump_table_high,x
-    pha
-    lda jump_table_low,x
-    pha
-
-    lda instruction_length,x
-    beq length1
-    cmp #1
-    beq length2
 
     .macro INCPC
         inc PCL             ; most of the time this is just inc+bne
@@ -319,30 +307,69 @@ no_adjust:
 no_inc_pch:
     .endm
 
+    .macro handle_operands
+        lda instruction_length,x
+        beq length1
+        cmp #1
+        beq length2
+
 length3:
-    INCPC
-    lda (PCL),y
-    sta byte2
+        INCPC
+        lda (PCL),y
+        sta byte2
 
-    INCPC
-    lda (PCL),y
-    sta byte3
+        INCPC
+        lda (PCL),y
+        sta byte3
 
-    jmp length1
+        jmp length1
 
 length2:
-    INCPC
-    lda (PCL),y
-    sta byte2
+        INCPC
+        lda (PCL),y
+        sta byte2
 
-    ; fallthrough
+        ; fallthrough
 
 length1:
-    INCPC
+        INCPC
+    .endm
 
-    rts            ; upon entering the opcode emulation, Y is always 0
+    lda (PCL),y                 ; retrieve instruction
+    tax
 
-                   ; shortest path is 12 6502 instructions
+.ifdef STACK_BASED_DISPATCHER
+
+    lda jump_table_high,x       ; 4
+    pha                         ; 3
+    lda jump_table_low,x        ; 4
+    pha                         ; 3 = 14
+
+    handle_operands
+
+    rts                         ; 6 + 14 = 20 cycles
+
+.else
+
+    asl                         ; 2
+    bcc do_tab1                 ; 3 if taken, 2 if not
+    jmp do_tab2                 ; 3
+
+do_tab1
+    sta _jmp1+1                 ; 4
+
+    handle_operands
+
+_jmp1   jmp (tab1)              ; 2+3+4+5 = 14          6 cycles faster
+
+do_tab2
+    sta _jmp2+1                 ; 4
+
+    handle_operands
+
+_jmp2   jmp (tab2)              ; 2+2+3+4+5 = 16        4 cycles faster
+
+.endif
 
 ; --------------------------------------------------------------------------
 
@@ -2440,6 +2467,8 @@ undefined_len = *-undefined
 
 ; --------------------------------------------------------------------------
 
+.ifdef STACK_BASED_DISPATCHER
+
 jump_table_low:
     dta l(opcode_00-1), l(opcode_01-1), l(opcode_02-1), l(opcode_03-1)
     dta l(opcode_04-1), l(opcode_05-1), l(opcode_06-1), l(opcode_07-1)
@@ -2571,6 +2600,78 @@ jump_table_high:
     dta h(opcode_f4-1), h(opcode_f5-1), h(opcode_f6-1), h(opcode_f7-1)
     dta h(opcode_f8-1), h(opcode_f9-1), h(opcode_fa-1), h(opcode_fb-1)
     dta h(opcode_fc-1), h(opcode_fd-1), h(opcode_fe-1), h(opcode_ff-1)
+
+.else               ; STACK_BASED_DISPATCHER
+
+    .align $100
+tab1
+    .word opcode_00, opcode_01, opcode_02, opcode_03
+    .word opcode_04, opcode_05, opcode_06, opcode_07
+    .word opcode_08, opcode_09, opcode_0a, opcode_0b
+    .word opcode_0c, opcode_0d, opcode_0e, opcode_0f
+    .word opcode_10, opcode_11, opcode_12, opcode_13
+    .word opcode_14, opcode_15, opcode_16, opcode_17
+    .word opcode_18, opcode_19, opcode_1a, opcode_1b
+    .word opcode_1c, opcode_1d, opcode_1e, opcode_1f
+    .word opcode_20, opcode_21, opcode_22, opcode_23
+    .word opcode_24, opcode_25, opcode_26, opcode_27
+    .word opcode_28, opcode_29, opcode_2a, opcode_2b
+    .word opcode_2c, opcode_2d, opcode_2e, opcode_2f
+    .word opcode_30, opcode_31, opcode_32, opcode_33
+    .word opcode_34, opcode_35, opcode_36, opcode_37
+    .word opcode_38, opcode_39, opcode_3a, opcode_3b
+    .word opcode_3c, opcode_3d, opcode_3e, opcode_3f
+    .word opcode_40, opcode_41, opcode_42, opcode_43
+    .word opcode_44, opcode_45, opcode_46, opcode_47
+    .word opcode_48, opcode_49, opcode_4a, opcode_4b
+    .word opcode_4c, opcode_4d, opcode_4e, opcode_4f
+    .word opcode_50, opcode_51, opcode_52, opcode_53
+    .word opcode_54, opcode_55, opcode_56, opcode_57
+    .word opcode_58, opcode_59, opcode_5a, opcode_5b
+    .word opcode_5c, opcode_5d, opcode_5e, opcode_5f
+    .word opcode_60, opcode_61, opcode_62, opcode_63
+    .word opcode_64, opcode_65, opcode_66, opcode_67
+    .word opcode_68, opcode_69, opcode_6a, opcode_6b
+    .word opcode_6c, opcode_6d, opcode_6e, opcode_6f
+    .word opcode_70, opcode_71, opcode_72, opcode_73
+    .word opcode_74, opcode_75, opcode_76, opcode_77
+    .word opcode_78, opcode_79, opcode_7a, opcode_7b
+    .word opcode_7c, opcode_7d, opcode_7e, opcode_7f
+tab2
+    .word opcode_80, opcode_81, opcode_82, opcode_83
+    .word opcode_84, opcode_85, opcode_86, opcode_87
+    .word opcode_88, opcode_89, opcode_8a, opcode_8b
+    .word opcode_8c, opcode_8d, opcode_8e, opcode_8f
+    .word opcode_90, opcode_91, opcode_92, opcode_93
+    .word opcode_94, opcode_95, opcode_96, opcode_97
+    .word opcode_98, opcode_99, opcode_9a, opcode_9b
+    .word opcode_9c, opcode_9d, opcode_9e, opcode_9f
+    .word opcode_a0, opcode_a1, opcode_a2, opcode_a3
+    .word opcode_a4, opcode_a5, opcode_a6, opcode_a7
+    .word opcode_a8, opcode_a9, opcode_aa, opcode_ab
+    .word opcode_ac, opcode_ad, opcode_ae, opcode_af
+    .word opcode_b0, opcode_b1, opcode_b2, opcode_b3
+    .word opcode_b4, opcode_b5, opcode_b6, opcode_b7
+    .word opcode_b8, opcode_b9, opcode_ba, opcode_bb
+    .word opcode_bc, opcode_bd, opcode_be, opcode_bf
+    .word opcode_c0, opcode_c1, opcode_c2, opcode_c3
+    .word opcode_c4, opcode_c5, opcode_c6, opcode_c7
+    .word opcode_c8, opcode_c9, opcode_ca, opcode_cb
+    .word opcode_cc, opcode_cd, opcode_ce, opcode_cf
+    .word opcode_d0, opcode_d1, opcode_d2, opcode_d3
+    .word opcode_d4, opcode_d5, opcode_d6, opcode_d7
+    .word opcode_d8, opcode_d9, opcode_da, opcode_db
+    .word opcode_dc, opcode_dd, opcode_de, opcode_df
+    .word opcode_e0, opcode_e1, opcode_e2, opcode_e3
+    .word opcode_e4, opcode_e5, opcode_e6, opcode_e7
+    .word opcode_e8, opcode_e9, opcode_ea, opcode_eb
+    .word opcode_ec, opcode_ed, opcode_ee, opcode_ef
+    .word opcode_f0, opcode_f1, opcode_f2, opcode_f3
+    .word opcode_f4, opcode_f5, opcode_f6, opcode_f7
+    .word opcode_f8, opcode_f9, opcode_fa, opcode_fb
+    .word opcode_fc, opcode_fd, opcode_fe, opcode_ff
+
+.endif
 
 ; --------------------------------------------------------------------------
 
