@@ -246,7 +246,7 @@ static void bios_entry(int function) {
     switch (function) {
 
     case 0:         // boot
-        memcpy(&mem[3][CPMB & 0x3fff], ccp_sys, ccp_sys_len);
+//        memcpy(&mem[3][CPMB & 0x3fff], ccp_sys, ccp_sys_len);
         memcpy(&mem[3][BDOS & 0x3fff], bdos_sys, bdos_sys_len);
 
         printf("\r\n64k CP/M vers 2.2\r\n");
