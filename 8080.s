@@ -2365,17 +2365,17 @@ bios_10:    ; SECTRAN
     rts
 
 bios_jump_table_low:
-    dta l(bios_00), l(bios_01), l(bios_02), l(bios_03)
-    dta l(bios_04), l(bios_05), l(bios_06), l(bios_07)
-    dta l(bios_08), l(bios_09), l(bios_0a), l(bios_0b)
-    dta l(bios_0c), l(bios_0d), l(bios_0e), l(bios_0f)
-    dta l(bios_10)
+    dta l(bios_00-1), l(bios_01-1), l(bios_02-1), l(bios_03-1)
+    dta l(bios_04-1), l(bios_05-1), l(bios_06-1), l(bios_07-1)
+    dta l(bios_08-1), l(bios_09-1), l(bios_0a-1), l(bios_0b-1)
+    dta l(bios_0c-1), l(bios_0d-1), l(bios_0e-1), l(bios_0f-1)
+    dta l(bios_10-1)
 bios_jump_table_high:
-    dta h(bios_00), h(bios_01), h(bios_02), h(bios_03)
-    dta h(bios_04), h(bios_05), h(bios_06), h(bios_07)
-    dta h(bios_08), h(bios_09), h(bios_0a), h(bios_0b)
-    dta h(bios_0c), h(bios_0d), h(bios_0e), h(bios_0f)
-    dta h(bios_10)
+    dta h(bios_00-1), h(bios_01-1), h(bios_02-1), h(bios_03-1)
+    dta h(bios_04-1), h(bios_05-1), h(bios_06-1), h(bios_07-1)
+    dta h(bios_08-1), h(bios_09-1), h(bios_0a-1), h(bios_0b-1)
+    dta h(bios_0c-1), h(bios_0d-1), h(bios_0e-1), h(bios_0f-1)
+    dta h(bios_10-1)
 
 drive_number:
     .byte 0
@@ -2394,6 +2394,10 @@ main:
     sta CPM65BIOS+1
     stx CPM65BIOS+2
 
+    lda #$a0                ; set green background
+    sta $02c6
+    sta $02c8
+
     ldx #0
 print_banner:
     lda banner,x
@@ -2405,9 +2409,9 @@ print_banner:
     cpx #banner_len
     bne print_banner
 
-    ldx #<BOOTF             ; start with cold boot
-    stx PCL
-    lda #>BOOTF
+    lda #<BOOTF             ; start with cold boot
+    sta PCL
+    ldx #>BOOTF
     stx PCH
     lda msb_to_adjusted,x
     sta PCHa
@@ -2428,6 +2432,10 @@ print_halted:
     inx
     cpx #halted_len
     bne print_halted
+
+    lda #0                  ; restore black background
+    sta $02c6
+    sta $02c8
 
     lda #NOBANK
     sta PORTB
