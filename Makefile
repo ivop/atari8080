@@ -23,7 +23,7 @@ atari8080-debug: atari8080.c Makefile disk.img tables/tables.h
 	$(CC) $(CFLAGS) -DBIOSDEBUG -DDEBUG -o $@ $< -lm
 
 disk.img: Makefile
-	dd if=/dev/zero of=disk.img bs=128 count=2002
+	dd if=/dev/zero of=disk.img bs=128 count=8190
 	mkfs.cpm -f atarihd disk.img
 	cpmcp -f atarihd disk.img $(CPMFILES) 0:
 
