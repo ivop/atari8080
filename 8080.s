@@ -2290,7 +2290,7 @@ bios_06:    ; PUNCH
     rts
 
 bios_07:    ; READER
-    lda #26
+    lda #26                     ; ^Z EOF
     sta regA
     rts
 
@@ -2345,9 +2345,74 @@ bios_0c:    ; SETDMA
     rts
 
 bios_0d:    ; READ
+    jsr calculate_abs_sector_number
+
+    ; switch to proper bank, set CP/M-65 DMA inside memory bank
+    ; read sector
+    ; check for overflow, copy to start of next bank
+
+    lda curbank
+    sta PORTB
+    ldy #0
+    sty regA
     rts
 
 bios_0e:    ; WRITE
+    jsr calculate_abs_sector_number
+
+    ; check if sector passes end of bank, if so, copy to overflow area
+    ; set CP/M-65 DMA to inside bank or overflow area
+    ; write sector
+
+    lda curbank
+    sta PORTB
+    ldy #0
+    sty regA
+    rts
+
+calculate_abs_sector_number:
+    ; track number * 18
+
+    ; *2 to temp16 and abs_sector_number
+
+    clc
+    lda track_number
+    asl
+    sta temp16
+    sta abs_sector_number
+
+    lda track_number+1
+    rol
+    sta temp16+1
+    sta abs_sector_number+1
+
+    ; abs_sector_number *8 --> *16 total
+
+    .rept 3
+    asl abs_sector_number
+    rol abs_sector_number+1
+    .endr
+
+    ; add *16 and *2 --> *18
+
+    clc
+    lda abs_sector_number
+    adc temp16
+    sta abs_sector_number
+    lda abs_sector_number+1
+    adc temp16+1
+    sta abs_sector_number+1
+
+    ; add sector_number
+
+    clc
+    lda abs_sector_number
+    adc sector_number
+    sta abs_sector_number
+    lda abs_sector_number+1
+    adc sector_number+1
+    sta abs_sector_number+1
+
     rts
 
 bios_0f:    ; LISTST
@@ -2386,6 +2451,8 @@ sector_number:
 abs_sector_number:
     .word 0
 dma_address:
+    .word 0
+temp16:
     .word 0
 
 ; Entry point from CP/M-65. Enter with A=lsb X=msb of BIOS entrypoint
