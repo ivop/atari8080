@@ -103,7 +103,9 @@ regM    = ZP+21         ; temporary M register, optimize later
 t8      = ZP+22
 saveCF  = ZP+23
 
-zp_len = 23
+tmp16   = ZP+24
+
+zp_len = 25             ; 32 max.
 
 SF_FLAG = %10000000
 ZF_FLAG = %01000000
@@ -2274,6 +2276,10 @@ bios_02:    ; CONST
 bios_03:    ; CONIN
     ldy #CPM65_BIOS_CONIN
     jsr CPM65BIOS
+    cmp #127                ; DEL
+    bne no_bs
+    lda #8                  ; BS
+no_bs:
     sta regA
     ldy #0
     rts
@@ -2347,8 +2353,33 @@ bios_0c:    ; SETDMA
 bios_0d:    ; READ
     jsr calculate_abs_sector_number
 
+    ; set CP/M-65 sector number
+
+    lda #<abs_sector_number
+    ldx #>abs_sector_number
+    ldy #CPM65_BIOS_SETSEC
+    jsr CPM65BIOS
+
     ; switch to proper bank, set CP/M-65 DMA inside memory bank
+
+    ldx dma_address
+    stx tmp16
+    ldx dma_address+1
+    lda msb_to_adjusted,x
+    sta tmp16+1
+    lda msb_to_bank,x
+    sta PORTB
+
+    lda tmp16
+    ldx tmp16+1
+    ldy #CPM65_BIOS_SETDMA
+    jsr CPM65BIOS
+
     ; read sector
+
+    ldy #CPM65_BIOS_READ
+    jsr CPM65BIOS
+
     ; check for overflow, copy to start of next bank
 
     lda curbank
@@ -2360,7 +2391,12 @@ bios_0d:    ; READ
 bios_0e:    ; WRITE
     jsr calculate_abs_sector_number
 
-    ; check if sector passes end of bank, if so, copy to overflow area
+    lda #<abs_sector_number
+    ldx #>abs_sector_number
+    ldy #CPM65_BIOS_SETSEC
+    jsr CPM65BIOS
+
+    ; check if DMA passes end of bank, if so, copy data to overflow area
     ; set CP/M-65 DMA to inside bank or overflow area
     ; write sector
 
@@ -2373,34 +2409,33 @@ bios_0e:    ; WRITE
 calculate_abs_sector_number:
     ; track number * 18
 
-    ; *2 to temp16 and abs_sector_number
+    ; *2 to tmp16 and abs_sector_number
 
-    clc
     lda track_number
     asl
-    sta temp16
     sta abs_sector_number
+    sta tmp16
 
     lda track_number+1
     rol
-    sta temp16+1
     sta abs_sector_number+1
+    sta tmp16+1
 
-    ; abs_sector_number *8 --> *16 total
+    ; tmp16 *8 --> *16 total
 
     .rept 3
-    asl abs_sector_number
-    rol abs_sector_number+1
+    asl tmp16
+    rol tmp16+1
     .endr
 
     ; add *16 and *2 --> *18
 
     clc
     lda abs_sector_number
-    adc temp16
+    adc tmp16
     sta abs_sector_number
     lda abs_sector_number+1
-    adc temp16+1
+    adc tmp16+1
     sta abs_sector_number+1
 
     ; add sector_number
@@ -2410,7 +2445,7 @@ calculate_abs_sector_number:
     adc sector_number
     sta abs_sector_number
     lda abs_sector_number+1
-    adc sector_number+1
+    adc #0
     sta abs_sector_number+1
 
     rts
@@ -2448,11 +2483,10 @@ track_number:
     .word 0
 sector_number:
     .byte 0
-abs_sector_number:
+abs_sector_number:      ; 3-byte sector number (only 2 are used)
     .word 0
+    .byte 0
 dma_address:
-    .word 0
-temp16:
     .word 0
 
 ; Entry point from CP/M-65. Enter with A=lsb X=msb of BIOS entrypoint
