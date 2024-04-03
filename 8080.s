@@ -2279,7 +2279,7 @@ bios_03:    ; CONIN
     rts
 
 bios_04:    ; CONOUT
-    lda regA
+    lda regC
     ldy #CPM65_BIOS_CONOUT
     jsr CPM65BIOS
     ldy #0
