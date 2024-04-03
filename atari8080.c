@@ -365,7 +365,7 @@ static void bios_entry(int function) {
         break; }
 
     case 14: {      // write
-        int abssec = track_number * 26 + sector_number;
+        int abssec = track_number * 18 + sector_number;
         int adr = dma_address;
         if (fseek(dsk0, abssec*128, SEEK_SET) == EINVAL) {
             biosprintf("FAILED\n");
