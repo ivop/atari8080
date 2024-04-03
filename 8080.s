@@ -2420,14 +2420,67 @@ no_overflow:
 bios_0e:    ; WRITE
     jsr calculate_abs_sector_number
 
+    ; set CP/M-65 sector number
+
     lda #<abs_sector_number
     ldx #>abs_sector_number
     ldy #CPM65_BIOS_SETSEC
     jsr CPM65BIOS
 
+    ; switch to proper bank, set CP/M-65 DMA inside memory bank
+
+    ldx dma_address
+    stx tmp16
+    ldx dma_address+1
+    lda msb_to_adjusted,x
+    sta tmp16+1
+    lda msb_to_bank,x
+    sta PORTB
+    sta t8                  ; save for later in case of overflow
+
+    lda tmp16
+    ldx tmp16+1
+    ldy #CPM65_BIOS_SETDMA
+    jsr CPM65BIOS
+
     ; check if DMA passes end of bank, if so, copy data to overflow area
-    ; set CP/M-65 DMA to inside bank or overflow area
+
+    lda tmp16
+    clc
+    adc #128
+    sta tmp16
+    lda tmp16+1
+    adc #0
+    sta tmp16+1
+    cmp #$80
+    bne no_overflow2
+
+    ldx dma_address+1
+    inx                     ; next page should be next bank
+    lda msb_to_bank,x
+    sta PORTB
+
+    ldx tmp16
+    dex                     ; minus one is the last byte of overflown bytes
+                            ; always <=127
+
+copy_to_overflow_area
+    lda $4000,x
+    sta $8000,x
+    dex
+    bpl copy_to_overflow_area
+
+    lda t8                  ; restore bank where DMA starts
+    sta PORTB
+
+no_overflow2:
+
     ; write sector
+
+    ldy #CPM65_BIOS_WRITE
+    jsr CPM65BIOS
+
+    ; restore emulator state
 
     lda curbank
     sta PORTB
