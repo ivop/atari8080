@@ -2382,6 +2382,35 @@ bios_0d:    ; READ
 
     ; check for overflow, copy to start of next bank
 
+    lda tmp16               ; contains adjusted address
+    clc
+    adc #128
+    sta tmp16
+    lda tmp16+1
+    adc #0
+    sta tmp16+1
+    cmp #$80                ; check if we wrote to our overflow area
+    bne no_overflow
+
+    ldx dma_address+1
+    inx                     ; next page should be next bank
+    lda msb_to_bank,x
+    sta PORTB
+
+    ldx tmp16
+    dex                     ; minus one is the last byte of overflown bytes
+                            ; always <=127
+
+copy_to_next_bank
+    lda $8000,x
+    sta $4000,x
+    dex
+    bpl copy_to_next_bank
+
+no_overflow:
+
+    ; restore emulator state
+
     lda curbank
     sta PORTB
     ldy #0
@@ -2550,28 +2579,41 @@ CPM65BIOS:
 ; --------------------------------------------------------------------------
 
 .ifdef CPM65
-EOL = 10
+    .macro dta_EOL
+        dta 13,10
+    .endm
 .endif
 
 .ifdef TEST
 ; EOL = $9b     ; already defined in cio.s
+    .macro dta_EOL
+        dta EOL
+    .endm
 .endif
 
 banner:
-    dta 'Intel 8080 Emulator for the 130XE', EOL
-    dta 'Copyright (C) 2023 by Ivo van Poorten', EOL, EOL
+    dta 'Intel 8080 Emulator for the 130XE'
+    dta_EOL
+    dta 'Copyright (C) 2023 by Ivo van Poorten'
+    dta_EOL
+    dta_EOL
 banner_len = *-banner
 
 halted:
-    dta EOL, EOL, 'Emulator was halted.', EOL
+    dta_EOL
+    dta_EOL
+    dta 'Emulator was halted.'
+    dta_EOL
 halted_len = * - halted
 
 cpmvers:
-    dta 'CP/M vers 2.2', EOL
+    dta 'CP/M vers 2.2'
+    dta_EOL
 cpmvers_len = * - cpmvers
 
 undefined:
-    dta 'Undefined opcode encountered.', EOL
+    dta 'Undefined opcode encountered.'
+    dta_EOL
 undefined_len = *-undefined
 
 ; --------------------------------------------------------------------------
