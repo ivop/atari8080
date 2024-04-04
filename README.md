@@ -6,18 +6,19 @@ in 6502 assembly. If you look at its source code, you'll find lots of
 ponderings and comments on how to efficiently implement it in assembly.
 It also mimics the 16kB extended memory banking of the Atari 130XE.
 
-The second version is the actual 6502 implementation. Currently it runs
-on the Atari 130XE and has a minimal BIOS implementation to run just enough
-of CP/M BDOS to output diagnostic messages to the screen. Future plans are
-to run it on top of CP/M-65 that will take care of all BIOS and BDOS
-functionality.
-
 The C version has a complete BIOS (minus list, reader and punch)
 implementation that is capable of running vanilla CP/M 2.2.
 Terminal handling is done in raw mode, so control
 characters work like expected. Ctrl-X exits the emulator.
-The emulated disk is an IBM 3740 but without sector skew. Eventually it'll
-run off an Atari drive or a simulated peripheral (SIO2SD, SIDE).  
+
+The 6502 version comes in two flavors. One runs one of the four test suites
+on the Atari OS and has a minimal BIOS, just enough to output messages
+to CONOUT.
+
+The second version is an overlay that is meant to be run on top of CP/M-65.
+It translates all 8080 BIOS calls to their CP/M-65 equivalents. BDOS and CCP
+run "natively" on the 8080 emulation.
+The overlay loader is at https://github.com/ivop/cpm65/tree/8080ovl.
 
 #### Assemble from source
 
