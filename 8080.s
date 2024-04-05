@@ -295,7 +295,7 @@ run_emulator:
     .macro INCPC
         inc PCL             ; most of the time this is just inc+bne
         bne no_inc_pch
-            inc PCH         ; each page crossing it's four instructions
+            inc PCH         ; each page crossing it's three instructions
             inc PCHa        ; longer
 ;            bit PCHa
             bpl no_adjust   ; except for when we are at the end of the bank
@@ -303,7 +303,7 @@ run_emulator:
                 lda msb_to_bank,x
                 sta curbank
                 sta PORTB
-                lda msb_to_adjusted,x
+                lda msb_to_adjusted,x       ; isn't this always lda #$40 ?
                 sta PCHa
 no_adjust:
 no_inc_pch:
@@ -534,9 +534,9 @@ opcode_3d:
     ; MVI reg       reg = byte2
 
     .macro MVI REG
-        get_byte2
-        lda byte2
+        lda (PCL),y
         sta :REG
+        INCPC
     .endm
 
 opcode_06:
@@ -564,7 +564,8 @@ opcode_2e:
     jmp run_emulator
 
 opcode_36:
-    get_byte2
+    get_byte2                       ; direct (PCL),y is not possible due
+                                    ; to possible bank switch for (HL)
     mem_write regL, regH, byte2
     jmp run_emulator
 
@@ -1932,43 +1933,43 @@ opcode_ff:
     ; ######################### IMMEDIATE #########################
     ; func byte2
 opcode_c6:          ; ADI
-    get_byte2
-    _ADD byte2
+    _ADD "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_ce:          ; ACI
-    get_byte2
-    _ADC byte2
+    _ADC "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_d6:          ; SUI
-    get_byte2
-    _SUB byte2
+    _SUB "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_de:          ; SBI
-    get_byte2
-    _SBC byte2
+    _SBC "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_e6:          ; ANI
-    get_byte2
-    ANA byte2
+    ANA "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_ee:          ; XRI
-    get_byte2
-    XRA byte2
+    XRA "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_f6:          ; ORI
-    get_byte2
-    _ORA byte2
+    _ORA "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_fe:          ; CPI
-    get_byte2
-    _CMP byte2
+    _CMP "(PCL),y"
+    INCPC
     jmp run_emulator
 
     ; ######################### XTHL/XCHG #########################
