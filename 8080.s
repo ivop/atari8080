@@ -353,11 +353,12 @@ opcode_00: ; NOP
     ; LXI XY       X <- byte3; Y <- byte2
 
     .macro LXI regX, regY
-        get_byte23
-        lda byte3
-        sta :regX
-        lda byte2
+        lda (PCL),y
         sta :regY
+        INCPC
+        lda (PCL),y
+        sta :regX
+        INCPC
     .endm
 
 opcode_01:
