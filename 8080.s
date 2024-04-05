@@ -1734,64 +1734,72 @@ opcode_c9: ; RET
     ; ######################### JMP #########################
     ; 
 opcode_c2:
-    get_byte23
     lda regF
     and #ZF_FLAG
     jeq _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_ca:
-    get_byte23
     lda regF
     and #ZF_FLAG
     jne _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_d2:
-    get_byte23
     lda regF
     and #CF_FLAG
     jeq _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_da:
-    get_byte23
     lda regF
     and #CF_FLAG
     jne _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_e2:
-    get_byte23
     lda regF
     and #PF_FLAG
     jeq _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_ea:
-    get_byte23
     lda regF
     and #PF_FLAG
     jne _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_f2:
-    get_byte23
     lda regF
     and #SF_FLAG
     jeq _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_fa:
-    get_byte23
     lda regF
     and #SF_FLAG
     jne _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_c3: ; JMP
-    get_byte23
 _JMP:
+    get_byte23
     lda byte2
     sta PCL
     ldx byte3               ; use X, saves one instruction
@@ -1806,64 +1814,72 @@ _JMP:
     ; ######################### CALL/RST #########################
     ;
 opcode_c4:
-    get_byte23
     lda regF
     and #ZF_FLAG
     jeq CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_cc:
-    get_byte23
     lda regF
     and #ZF_FLAG
     jne CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_d4:
-    get_byte23
     lda regF
     and #CF_FLAG
     jeq CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_dc:
-    get_byte23
     lda regF
     and #CF_FLAG
     jne CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_e4:
-    get_byte23
     lda regF
     and #PF_FLAG
     jeq CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_ec:
-    get_byte23
     lda regF
     and #PF_FLAG
     jne CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_f4:
-    get_byte23
     lda regF
     and #SF_FLAG
     jeq CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_fc:
-    get_byte23
     lda regF
     and #SF_FLAG
     jne CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_cd:  ; CALL
-    get_byte23
 CALL:
+    get_byte23
     PUSH PCH,PCL
     lda byte2
     sta PCL
