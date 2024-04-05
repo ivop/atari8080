@@ -309,36 +309,7 @@ no_adjust:
 no_inc_pch:
     .endm
 
-    .macro handle_operands
-        lda instruction_length,x
-        beq length1
-        cmp #1
-        beq length2
-
-length3:
-        INCPC
-        lda (PCL),y
-        sta byte2
-
-        INCPC
-        lda (PCL),y
-        sta byte3
-
-        jmp length1
-
-length2:
-        INCPC
-        lda (PCL),y
-        sta byte2
-
-        ; fallthrough
-
-length1:
-        INCPC
-    .endm
-
     lda (PCL),y                 ; retrieve instruction
-    tax
 
     asl                         ; 2
     bcc do_tab1                 ; 3 if taken, 2 if not
@@ -347,16 +318,31 @@ length1:
 do_tab1
     sta _jmp1+1                 ; 4
 
-    handle_operands
+    INCPC
 
 _jmp1   jmp (tab1)              ; 2+3+4+5 = 14          6 cycles faster
 
 do_tab2
     sta _jmp2+1                 ; 4
 
-    handle_operands
+    INCPC
 
 _jmp2   jmp (tab2)              ; 2+2+3+4+5 = 16        4 cycles faster
+
+    .macro get_byte2
+        lda (PCL),y
+        sta byte2
+        INCPC
+    .endm
+
+    .macro get_byte23
+        lda (PCL),y
+        sta byte2
+        INCPC
+        lda (PCL),y
+        sta byte3
+        INCPC
+    .endm
 
 ; --------------------------------------------------------------------------
 
@@ -367,6 +353,7 @@ opcode_00: ; NOP
     ; LXI XY       X <- byte3; Y <- byte2
 
     .macro LXI regX, regY
+        get_byte23
         lda byte3
         sta :regX
         lda byte2
@@ -401,6 +388,7 @@ opcode_12:  ; STAX D ---- (DE) <- A
     jmp run_emulator
 
 opcode_22:  ; SHLD adr ---- (adr) <-L;(adr+1) <- H
+    get_byte23
     mem_write_no_curbank_restore byte2, byte3, regL
     inc byte2
     bne @+
@@ -410,6 +398,7 @@ opcode_22:  ; SHLD adr ---- (adr) <-L;(adr+1) <- H
     jmp run_emulator
 
 opcode_32:  ; STA adr ---- (adr) <- A
+    get_byte23
     mem_write byte2, byte3, regA
     jmp run_emulator
 
@@ -545,6 +534,7 @@ opcode_3d:
     ; MVI reg       reg = byte2
 
     .macro MVI REG
+        get_byte2
         lda byte2
         sta :REG
     .endm
@@ -574,6 +564,7 @@ opcode_2e:
     jmp run_emulator
 
 opcode_36:
+    get_byte2
     mem_write regL, regH, byte2
     jmp run_emulator
 
@@ -629,6 +620,7 @@ opcode_1a:  ; LDAX D ---- A <- (DE)
     jmp run_emulator
 
 opcode_2a:  ; LHLD adr ---- L <- (adr);H <- (adr+1)
+    get_byte23
     mem_read_no_curbank_restore byte2, byte3, regL
     inc byte2
     bne @+
@@ -638,6 +630,7 @@ opcode_2a:  ; LHLD adr ---- L <- (adr);H <- (adr+1)
     jmp run_emulator
 
 opcode_3a:  ; // LDA adr ---- A <- (adr)
+    get_byte23
     mem_read byte2, byte3, regA
     jmp run_emulator
 
@@ -1739,55 +1732,64 @@ opcode_c9: ; RET
     ; ######################### JMP #########################
     ; 
 opcode_c2:
+    get_byte23
     lda regF
     and #ZF_FLAG
-    beq _JMP
+    jeq _JMP
     jmp run_emulator
 
 opcode_ca:
+    get_byte23
     lda regF
     and #ZF_FLAG
-    bne _JMP
+    jne _JMP
     jmp run_emulator
 
 opcode_d2:
+    get_byte23
     lda regF
     and #CF_FLAG
-    beq _JMP
+    jeq _JMP
     jmp run_emulator
 
 opcode_da:
+    get_byte23
     lda regF
     and #CF_FLAG
-    bne _JMP
+    jne _JMP
     jmp run_emulator
 
 opcode_e2:
+    get_byte23
     lda regF
     and #PF_FLAG
-    beq _JMP
+    jeq _JMP
     jmp run_emulator
 
 opcode_ea:
+    get_byte23
     lda regF
     and #PF_FLAG
-    bne _JMP
+    jne _JMP
     jmp run_emulator
 
 opcode_f2:
+    get_byte23
     lda regF
     and #SF_FLAG
-    beq _JMP
+    jeq _JMP
     jmp run_emulator
 
 opcode_fa:
+    get_byte23
     lda regF
     and #SF_FLAG
-    bne _JMP
+    jne _JMP
     jmp run_emulator
 
-_JMP:
 opcode_c3: ; JMP
+    get_byte23
+_JMP:
     lda byte2
     sta PCL
     ldx byte3               ; use X, saves one instruction
@@ -1802,55 +1804,64 @@ opcode_c3: ; JMP
     ; ######################### CALL/RST #########################
     ;
 opcode_c4:
+    get_byte23
     lda regF
     and #ZF_FLAG
-    beq CALL
+    jeq CALL
     jmp run_emulator
 
 opcode_cc:
+    get_byte23
     lda regF
     and #ZF_FLAG
-    bne CALL
+    jne CALL
     jmp run_emulator
 
 opcode_d4:
+    get_byte23
     lda regF
     and #CF_FLAG
-    beq CALL
+    jeq CALL
     jmp run_emulator
 
 opcode_dc:
+    get_byte23
     lda regF
     and #CF_FLAG
-    bne CALL
+    jne CALL
     jmp run_emulator
 
 opcode_e4:
+    get_byte23
     lda regF
     and #PF_FLAG
-    beq CALL
+    jeq CALL
     jmp run_emulator
 
 opcode_ec:
+    get_byte23
     lda regF
     and #PF_FLAG
-    bne CALL
+    jne CALL
     jmp run_emulator
 
 opcode_f4:
+    get_byte23
     lda regF
     and #SF_FLAG
-    beq CALL
+    jeq CALL
     jmp run_emulator
 
 opcode_fc:
+    get_byte23
     lda regF
     and #SF_FLAG
-    bne CALL
+    jne CALL
     jmp run_emulator
 
-CALL:
 opcode_cd:  ; CALL
+    get_byte23
+CALL:
     PUSH PCH,PCL
     lda byte2
     sta PCL
@@ -1867,28 +1878,28 @@ opcode_c7:  ; RST0
     lda #0
     sta byte3
     sta byte2
-    beq CALL
+    jmp CALL
 
 opcode_cf:  ; etc...
     lda #0
     sta byte3
     lda #$08
     sta byte2
-    bne CALL
+    jmp CALL
 
 opcode_d7:
     lda #0
     sta byte3
     lda #$10
     sta byte2
-    bne CALL
+    jmp CALL
 
 opcode_df:
     lda #0
     sta byte3
     lda #$18
     sta byte2
-    bne CALL
+    jmp CALL
 
 opcode_e7:
     lda #0
@@ -1921,34 +1932,42 @@ opcode_ff:
     ; ######################### IMMEDIATE #########################
     ; func byte2
 opcode_c6:          ; ADI
+    get_byte2
     _ADD byte2
     jmp run_emulator
 
 opcode_ce:          ; ACI
+    get_byte2
     _ADC byte2
     jmp run_emulator
 
 opcode_d6:          ; SUI
+    get_byte2
     _SUB byte2
     jmp run_emulator
 
 opcode_de:          ; SBI
+    get_byte2
     _SBC byte2
     jmp run_emulator
 
 opcode_e6:          ; ANI
+    get_byte2
     ANA byte2
     jmp run_emulator
 
 opcode_ee:          ; XRI
+    get_byte2
     XRA byte2
     jmp run_emulator
 
 opcode_f6:          ; ORI
+    get_byte2
     _ORA byte2
     jmp run_emulator
 
 opcode_fe:          ; CPI
+    get_byte2
     _CMP byte2
     jmp run_emulator
 
@@ -2013,10 +2032,12 @@ opcode_f9:  ; SPHL ---- SP <- HL
     ; ######################### OUT/IN #########################
     ;
 opcode_d3:
+    get_byte2
     jsr MY_BIOS
     jmp run_emulator
 
 opcode_db:
+    get_byte2
     jmp run_emulator
 
     ; ######################### DI/EI #########################
