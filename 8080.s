@@ -18,19 +18,6 @@
 
 ; Needed for standalone test
 
-.ifdef TEST
-
-    icl 'cio.s'
-
-LMARGN = $52
-RMARGN = $53
-ROWCRS = $54
-COLCRS = $55
-
-COLOR2 = $02c6
-
-.endif
-
 PORTB = $d301
 
 ; addresses inside virtual 8080 machine
@@ -43,15 +30,6 @@ BIOS  = $fa00
 BOOTF  = (BIOS+( 0*3))
 WBOOTF = (BIOS+( 1*3))
 DPBASE = (BIOS+(17*3))
-
-.ifdef TEST
-; OS ROM on, BASIC off
-NOBANK = $ff
-BANK0 = $e3 | $00 | $00
-BANK1 = $e3 | $00 | $04
-BANK2 = $e3 | $08 | $00
-BANK3 = $e3 | $08 | $04
-.endif
 
 .ifdef CPM65
 ; OS ROM off, BASIC off
@@ -140,40 +118,9 @@ set_bank0:
     .byte 0xc3          ; JMP
     .word BDOSE
 
-.ifdef TEST
-
-; load test program
-
-    org $4100           ; 8080 memory at 00100h
-
-    ; 8080PRE.COM, TST8080.COM, 8080EXM.COM
-    ; CPUTEST.COM needs to be split in two
-    ; because it's larger than 03f00h bytes
-
-    ins 'tests/8080PRE.COM'
-;    ins 'tests/TST8080.COM'
-;    ins 'tests/cputst1.dat'
-;    ins 'tests/8080EXM.COM'
-;    ins 'tests/8080EXMP.COM'     ; patched in reverse order
-
-;    org $8000
-;
-;set_bank1:
-;    lda #BANK1
-;    sta PORTB
-;    rts
-;
-;    ini set_bank1
-;
-;    org $4000
-;
-;    ins 'tests/cputst2.dat'
-
-.endif
-
 ; --------------------------------------------------------------------------
 
-; Load BDOS
+; Load BDOS and BIOS directly to extended memory banks.
 
     org $8000
 
@@ -187,9 +134,6 @@ set_bank3:
     org $4000+(BDOS&$3fff)  ; in bank 3
 
     ins 'cpm22/bdos.sys'
-
-; Load BIOS. Implement same OUT port,A as in atari8080.c. CONOUT is enough
-; to print messages.
 
     org $4000+(BIOS&$3fff)  ; in bank 3
 
@@ -2078,101 +2022,10 @@ opcode_d9:
 opcode_dd:
 opcode_ed:
 opcode_fd:
-.ifdef TEST
-    bput 0, undefined_len, undefined
-.endif
 .ifdef CPM65
 ; print message through BIOS CONOUT
 .endif
     rts
-
-; --------------------------------------------------------------------------
-
-; Standalone test code
-
-.ifdef TEST
-
-MY_BIOS:
-    lda byte2
-    cmp #2
-    beq const
-    cmp #4
-    beq conout
-    KIL
-
-const:
-    lda #0          ; no key pending
-    sta regA
-list:
-    rts
-
-conout:
-    lda regC
-    beq skip        ; CPUTEST.COM sends six zeroes, confirmed with atari8080.c
-    cmp #13
-    beq skip
-    cmp #7
-    bne nobell      ; CPUTEST.COM sends bell before and after timing
-
-    lda #253        ; We have a buzzer!
-    bne charout
-
-nobell:
-    cmp #10
-    bne charout
-
-crlf:
-    lda #$9b
-charout:
-    sta charbuf
-    bput 0, 1, charbuf
-skip:
-    ldy #0
-    rts
-
-charbuf:
-    .byte 0
-
-; SETUP EMULATOR
-
-main:
-    lda #0
-    sta LMARGN
-    sta COLCRS
-    sta COLOR2
-
-    ; print banner
-
-    bput 0, banner_len, banner
-
-    ; 8080 memory is already setup by the loader
-
-    ; set PC to test program
-
-    lda #0
-    sta PCL
-    lda #$01
-    sta PCH
-
-    tax
-    lda msb_to_adjusted,x
-    sta PCHa
-    lda msb_to_bank,x
-    sta curbank
-    sta PORTB
-
-    lda #ON_FLAG            ; always on, never zeroed (if the code is correct)
-    sta regF
-
-    ldy #0                  ; Always enter emulation loop with Y=0
-
-    jsr run_emulator
-
-    bput 0, halted_len, halted
-
-    jmp *
-
-.endif
 
 ; --------------------------------------------------------------------------
 
@@ -2658,13 +2511,6 @@ CPM65BIOS:
 .ifdef CPM65
     .macro dta_EOL
         dta 13,10
-    .endm
-.endif
-
-.ifdef TEST
-; EOL = $9b     ; already defined in cio.s
-    .macro dta_EOL
-        dta EOL
     .endm
 .endif
 
