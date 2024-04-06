@@ -5,14 +5,12 @@ This repository contains an Intel 8080 emulator for the Atari 130XE written in 6
 The Makefile builds an overlay that is meant to be run on top of CP/M-65.
 It translates all 8080 BIOS calls to their CP/M-65 equivalents. BDOS and CCP
 run "natively" on the 8080 emulation.
-The overlay loader is at https://github.com/ivop/cpm65/tree/8080ovl.
-
-#### Assemble from source
+The overlay loader is currently at https://github.com/ivop/cpm65/tree/8080ovl.
 
 To assembly 8080.s into a binary you need the MADS Assembler which can be
 found here: https://github.com/tebe6502/Mad-Assembler/ 
 
-#### Future work
+#### Possible Future work
 
 ##### Source to source translator
 
