@@ -311,23 +311,23 @@ no_inc_pch:
 
     lda (PCL),y                 ; retrieve instruction
 
-    asl                         ; 2
-    bcc do_tab1                 ; 3 if taken, 2 if not
-    jmp do_tab2                 ; 3
+    asl
+    bcc do_tab1
+    jmp do_tab2
 
 do_tab1
-    sta _jmp1+1                 ; 4
+    sta _jmp1+1
 
     INCPC
 
-_jmp1   jmp (tab1)              ; 2+3+4+5 = 14          6 cycles faster
+_jmp1   jmp (tab1)
 
 do_tab2
-    sta _jmp2+1                 ; 4
+    sta _jmp2+1
 
     INCPC
 
-_jmp2   jmp (tab2)              ; 2+2+3+4+5 = 16        4 cycles faster
+_jmp2   jmp (tab2)
 
     .macro get_byte2
         lda (PCL),y
