@@ -33,7 +33,7 @@ Right now, for a lot of instructions,
 the overhead of the instruction dispatcher is huge.
 For example, all MOV instructions, except when M is involved, are just
 a single lda and a single sta in 6502 assembly.
-Add to that at least 12 instructions for the instruction fetcher,
+Add to that at least 7 instructions for the instruction fetcher, often more,
 and it's obvious that that's a huge factor in slowing down the emulation.
 It would be nice if multiple instructions could be executed after
 eachother without the dispatcher slowing it down. However, the setup time
