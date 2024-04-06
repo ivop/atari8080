@@ -9,7 +9,7 @@ It translates all 8080 BIOS calls to their CP/M-65 equivalents. BDOS and CCP
 run "natively" on the 8080 emulation.
 The overlay loader is currently at https://github.com/ivop/cpm65/tree/8080ovl.
 
-To assembly 8080.s into a binary you need the MADS Assembler which can be
+To assemble 8080.s into a binary you need the MADS Assembler which can be
 found here: https://github.com/tebe6502/Mad-Assembler/ 
 
 #### Possible Future work
