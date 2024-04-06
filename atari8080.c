@@ -301,7 +301,8 @@ static void bios_entry(int function) {
         break;
 
     case 4:         // conout
-        printf("[32m%c[0m", C);     // we want some colors.
+//        printf("[32m%c[0m", C);     // we want some colors.
+        putchar(C);
         fflush(stdout);
         break;
 
