@@ -1,21 +1,8 @@
 ### Intel 8080 Emulator
 
-This repository contains two Intel 8080 emulators. One was written in C
-with the idea in mind to eventually implement the same virtual machine
-in 6502 assembly. If you look at its source code, you'll find lots of
-ponderings and comments on how to efficiently implement it in assembly.
-It also mimics the 16kB extended memory banking of the Atari 130XE.
+This repository contains an Intel 8080 emulator for the Atari 130XE written in 6502 assembly.
 
-The C version has a complete BIOS (minus list, reader and punch)
-implementation that is capable of running vanilla CP/M 2.2.
-Terminal handling is done in raw mode, so control
-characters work like expected. Ctrl-X exits the emulator.
-
-The 6502 version comes in two flavors. One runs one of the four test suites
-on the Atari OS and has a minimal BIOS, just enough to output messages
-to CONOUT.
-
-The second version is an overlay that is meant to be run on top of CP/M-65.
+The Makefile builds an overlay that is meant to be run on top of CP/M-65.
 It translates all 8080 BIOS calls to their CP/M-65 equivalents. BDOS and CCP
 run "natively" on the 8080 emulation.
 The overlay loader is at https://github.com/ivop/cpm65/tree/8080ovl.
@@ -64,7 +51,9 @@ All four tests with the 6502 core are succesful!
 ![cputest.png](images/cputest.png) ![8080exm.png](images/8080exm.png)  
 
 
-The 8080 core runs all validation sets correctly. Output:
+The 8080 prototype core in C runs all validation sets correctly. Note that the BIOS handling might not have all the bugfixes the 6502 version got.  
+
+Output:
 
 ```
 $ ./atari8080 bootdisk.img 
