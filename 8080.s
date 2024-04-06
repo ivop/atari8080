@@ -295,7 +295,7 @@ run_emulator:
     .macro INCPC
         inc PCL             ; most of the time this is just inc+bne
         bne no_inc_pch
-            inc PCH         ; each page crossing it's four instructions
+            inc PCH         ; each page crossing it's three instructions
             inc PCHa        ; longer
 ;            bit PCHa
             bpl no_adjust   ; except for when we are at the end of the bank
@@ -303,75 +303,46 @@ run_emulator:
                 lda msb_to_bank,x
                 sta curbank
                 sta PORTB
-                lda msb_to_adjusted,x
+                lda msb_to_adjusted,x       ; isn't this always lda #$40 ?
                 sta PCHa
 no_adjust:
 no_inc_pch:
     .endm
 
-    .macro handle_operands
-        lda instruction_length,x
-        beq length1
-        cmp #1
-        beq length2
+    lda (PCL),y                 ; retrieve instruction
 
-length3:
-        INCPC
+    asl
+    bcc do_tab1
+    jmp do_tab2
+
+do_tab1
+    sta _jmp1+1
+
+    INCPC
+
+_jmp1   jmp (tab1)
+
+do_tab2
+    sta _jmp2+1
+
+    INCPC
+
+_jmp2   jmp (tab2)
+
+    .macro get_byte2
         lda (PCL),y
         sta byte2
-
-        INCPC
-        lda (PCL),y
-        sta byte3
-
-        jmp length1
-
-length2:
-        INCPC
-        lda (PCL),y
-        sta byte2
-
-        ; fallthrough
-
-length1:
         INCPC
     .endm
 
-    lda (PCL),y                 ; retrieve instruction
-    tax
-
-.ifdef STACK_BASED_DISPATCHER
-
-    lda jump_table_high,x       ; 4
-    pha                         ; 3
-    lda jump_table_low,x        ; 4
-    pha                         ; 3 = 14
-
-    handle_operands
-
-    rts                         ; 6 + 14 = 20 cycles
-
-.else
-
-    asl                         ; 2
-    bcc do_tab1                 ; 3 if taken, 2 if not
-    jmp do_tab2                 ; 3
-
-do_tab1
-    sta _jmp1+1                 ; 4
-
-    handle_operands
-
-_jmp1   jmp (tab1)              ; 2+3+4+5 = 14          6 cycles faster
-
-do_tab2
-    sta _jmp2+1                 ; 4
-
-    handle_operands
-
-_jmp2   jmp (tab2)              ; 2+2+3+4+5 = 16        4 cycles faster
-
-.endif
+    .macro get_byte23
+        lda (PCL),y
+        sta byte2
+        INCPC
+        lda (PCL),y
+        sta byte3
+        INCPC
+    .endm
 
 ; --------------------------------------------------------------------------
 
@@ -382,10 +353,12 @@ opcode_00: ; NOP
     ; LXI XY       X <- byte3; Y <- byte2
 
     .macro LXI regX, regY
-        lda byte3
-        sta :regX
-        lda byte2
+        lda (PCL),y
         sta :regY
+        INCPC
+        lda (PCL),y
+        sta :regX
+        INCPC
     .endm
 
 opcode_01:
@@ -416,6 +389,7 @@ opcode_12:  ; STAX D ---- (DE) <- A
     jmp run_emulator
 
 opcode_22:  ; SHLD adr ---- (adr) <-L;(adr+1) <- H
+    get_byte23
     mem_write_no_curbank_restore byte2, byte3, regL
     inc byte2
     bne @+
@@ -425,6 +399,7 @@ opcode_22:  ; SHLD adr ---- (adr) <-L;(adr+1) <- H
     jmp run_emulator
 
 opcode_32:  ; STA adr ---- (adr) <- A
+    get_byte23
     mem_write byte2, byte3, regA
     jmp run_emulator
 
@@ -560,8 +535,9 @@ opcode_3d:
     ; MVI reg       reg = byte2
 
     .macro MVI REG
-        lda byte2
+        lda (PCL),y
         sta :REG
+        INCPC
     .endm
 
 opcode_06:
@@ -589,6 +565,8 @@ opcode_2e:
     jmp run_emulator
 
 opcode_36:
+    get_byte2                       ; direct (PCL),y is not possible due
+                                    ; to possible bank switch for (HL)
     mem_write regL, regH, byte2
     jmp run_emulator
 
@@ -644,6 +622,7 @@ opcode_1a:  ; LDAX D ---- A <- (DE)
     jmp run_emulator
 
 opcode_2a:  ; LHLD adr ---- L <- (adr);H <- (adr+1)
+    get_byte23
     mem_read_no_curbank_restore byte2, byte3, regL
     inc byte2
     bne @+
@@ -653,6 +632,7 @@ opcode_2a:  ; LHLD adr ---- L <- (adr);H <- (adr+1)
     jmp run_emulator
 
 opcode_3a:  ; // LDA adr ---- A <- (adr)
+    get_byte23
     mem_read byte2, byte3, regA
     jmp run_emulator
 
@@ -1756,53 +1736,70 @@ opcode_c9: ; RET
 opcode_c2:
     lda regF
     and #ZF_FLAG
-    beq _JMP
+    jeq _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_ca:
     lda regF
     and #ZF_FLAG
-    bne _JMP
+    jne _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_d2:
     lda regF
     and #CF_FLAG
-    beq _JMP
+    jeq _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_da:
     lda regF
     and #CF_FLAG
-    bne _JMP
+    jne _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_e2:
     lda regF
     and #PF_FLAG
-    beq _JMP
+    jeq _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_ea:
     lda regF
     and #PF_FLAG
-    bne _JMP
+    jne _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_f2:
     lda regF
     and #SF_FLAG
-    beq _JMP
+    jeq _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_fa:
     lda regF
     and #SF_FLAG
-    bne _JMP
+    jne _JMP
+    INCPC
+    INCPC
     jmp run_emulator
 
-_JMP:
 opcode_c3: ; JMP
+_JMP:
+    get_byte23
     lda byte2
     sta PCL
     ldx byte3               ; use X, saves one instruction
@@ -1819,53 +1816,70 @@ opcode_c3: ; JMP
 opcode_c4:
     lda regF
     and #ZF_FLAG
-    beq CALL
+    jeq CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_cc:
     lda regF
     and #ZF_FLAG
-    bne CALL
+    jne CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_d4:
     lda regF
     and #CF_FLAG
-    beq CALL
+    jeq CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_dc:
     lda regF
     and #CF_FLAG
-    bne CALL
+    jne CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_e4:
     lda regF
     and #PF_FLAG
-    beq CALL
+    jeq CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_ec:
     lda regF
     and #PF_FLAG
-    bne CALL
+    jne CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_f4:
     lda regF
     and #SF_FLAG
-    beq CALL
+    jeq CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
 opcode_fc:
     lda regF
     and #SF_FLAG
-    bne CALL
+    jne CALL
+    INCPC
+    INCPC
     jmp run_emulator
 
-CALL:
 opcode_cd:  ; CALL
+CALL:
+    get_byte23
     PUSH PCH,PCL
     lda byte2
     sta PCL
@@ -1882,28 +1896,28 @@ opcode_c7:  ; RST0
     lda #0
     sta byte3
     sta byte2
-    beq CALL
+    jmp CALL
 
 opcode_cf:  ; etc...
     lda #0
     sta byte3
     lda #$08
     sta byte2
-    bne CALL
+    jmp CALL
 
 opcode_d7:
     lda #0
     sta byte3
     lda #$10
     sta byte2
-    bne CALL
+    jmp CALL
 
 opcode_df:
     lda #0
     sta byte3
     lda #$18
     sta byte2
-    bne CALL
+    jmp CALL
 
 opcode_e7:
     lda #0
@@ -1936,35 +1950,43 @@ opcode_ff:
     ; ######################### IMMEDIATE #########################
     ; func byte2
 opcode_c6:          ; ADI
-    _ADD byte2
+    _ADD "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_ce:          ; ACI
-    _ADC byte2
+    _ADC "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_d6:          ; SUI
-    _SUB byte2
+    _SUB "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_de:          ; SBI
-    _SBC byte2
+    _SBC "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_e6:          ; ANI
-    ANA byte2
+    ANA "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_ee:          ; XRI
-    XRA byte2
+    XRA "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_f6:          ; ORI
-    _ORA byte2
+    _ORA "(PCL),y"
+    INCPC
     jmp run_emulator
 
 opcode_fe:          ; CPI
-    _CMP byte2
+    _CMP "(PCL),y"
+    INCPC
     jmp run_emulator
 
     ; ######################### XTHL/XCHG #########################
@@ -2028,10 +2050,12 @@ opcode_f9:  ; SPHL ---- SP <- HL
     ; ######################### OUT/IN #########################
     ;
 opcode_d3:
+    get_byte2
     jsr MY_BIOS
     jmp run_emulator
 
 opcode_db:
+    get_byte2
     jmp run_emulator
 
     ; ######################### DI/EI #########################
@@ -2671,142 +2695,6 @@ undefined_len = *-undefined
 
 ; --------------------------------------------------------------------------
 
-.ifdef STACK_BASED_DISPATCHER
-
-jump_table_low:
-    dta l(opcode_00-1), l(opcode_01-1), l(opcode_02-1), l(opcode_03-1)
-    dta l(opcode_04-1), l(opcode_05-1), l(opcode_06-1), l(opcode_07-1)
-    dta l(opcode_08-1), l(opcode_09-1), l(opcode_0a-1), l(opcode_0b-1)
-    dta l(opcode_0c-1), l(opcode_0d-1), l(opcode_0e-1), l(opcode_0f-1)
-    dta l(opcode_10-1), l(opcode_11-1), l(opcode_12-1), l(opcode_13-1)
-    dta l(opcode_14-1), l(opcode_15-1), l(opcode_16-1), l(opcode_17-1)
-    dta l(opcode_18-1), l(opcode_19-1), l(opcode_1a-1), l(opcode_1b-1)
-    dta l(opcode_1c-1), l(opcode_1d-1), l(opcode_1e-1), l(opcode_1f-1)
-    dta l(opcode_20-1), l(opcode_21-1), l(opcode_22-1), l(opcode_23-1)
-    dta l(opcode_24-1), l(opcode_25-1), l(opcode_26-1), l(opcode_27-1)
-    dta l(opcode_28-1), l(opcode_29-1), l(opcode_2a-1), l(opcode_2b-1)
-    dta l(opcode_2c-1), l(opcode_2d-1), l(opcode_2e-1), l(opcode_2f-1)
-    dta l(opcode_30-1), l(opcode_31-1), l(opcode_32-1), l(opcode_33-1)
-    dta l(opcode_34-1), l(opcode_35-1), l(opcode_36-1), l(opcode_37-1)
-    dta l(opcode_38-1), l(opcode_39-1), l(opcode_3a-1), l(opcode_3b-1)
-    dta l(opcode_3c-1), l(opcode_3d-1), l(opcode_3e-1), l(opcode_3f-1)
-    dta l(opcode_40-1), l(opcode_41-1), l(opcode_42-1), l(opcode_43-1)
-    dta l(opcode_44-1), l(opcode_45-1), l(opcode_46-1), l(opcode_47-1)
-    dta l(opcode_48-1), l(opcode_49-1), l(opcode_4a-1), l(opcode_4b-1)
-    dta l(opcode_4c-1), l(opcode_4d-1), l(opcode_4e-1), l(opcode_4f-1)
-    dta l(opcode_50-1), l(opcode_51-1), l(opcode_52-1), l(opcode_53-1)
-    dta l(opcode_54-1), l(opcode_55-1), l(opcode_56-1), l(opcode_57-1)
-    dta l(opcode_58-1), l(opcode_59-1), l(opcode_5a-1), l(opcode_5b-1)
-    dta l(opcode_5c-1), l(opcode_5d-1), l(opcode_5e-1), l(opcode_5f-1)
-    dta l(opcode_60-1), l(opcode_61-1), l(opcode_62-1), l(opcode_63-1)
-    dta l(opcode_64-1), l(opcode_65-1), l(opcode_66-1), l(opcode_67-1)
-    dta l(opcode_68-1), l(opcode_69-1), l(opcode_6a-1), l(opcode_6b-1)
-    dta l(opcode_6c-1), l(opcode_6d-1), l(opcode_6e-1), l(opcode_6f-1)
-    dta l(opcode_70-1), l(opcode_71-1), l(opcode_72-1), l(opcode_73-1)
-    dta l(opcode_74-1), l(opcode_75-1), l(opcode_76-1), l(opcode_77-1)
-    dta l(opcode_78-1), l(opcode_79-1), l(opcode_7a-1), l(opcode_7b-1)
-    dta l(opcode_7c-1), l(opcode_7d-1), l(opcode_7e-1), l(opcode_7f-1)
-    dta l(opcode_80-1), l(opcode_81-1), l(opcode_82-1), l(opcode_83-1)
-    dta l(opcode_84-1), l(opcode_85-1), l(opcode_86-1), l(opcode_87-1)
-    dta l(opcode_88-1), l(opcode_89-1), l(opcode_8a-1), l(opcode_8b-1)
-    dta l(opcode_8c-1), l(opcode_8d-1), l(opcode_8e-1), l(opcode_8f-1)
-    dta l(opcode_90-1), l(opcode_91-1), l(opcode_92-1), l(opcode_93-1)
-    dta l(opcode_94-1), l(opcode_95-1), l(opcode_96-1), l(opcode_97-1)
-    dta l(opcode_98-1), l(opcode_99-1), l(opcode_9a-1), l(opcode_9b-1)
-    dta l(opcode_9c-1), l(opcode_9d-1), l(opcode_9e-1), l(opcode_9f-1)
-    dta l(opcode_a0-1), l(opcode_a1-1), l(opcode_a2-1), l(opcode_a3-1)
-    dta l(opcode_a4-1), l(opcode_a5-1), l(opcode_a6-1), l(opcode_a7-1)
-    dta l(opcode_a8-1), l(opcode_a9-1), l(opcode_aa-1), l(opcode_ab-1)
-    dta l(opcode_ac-1), l(opcode_ad-1), l(opcode_ae-1), l(opcode_af-1)
-    dta l(opcode_b0-1), l(opcode_b1-1), l(opcode_b2-1), l(opcode_b3-1)
-    dta l(opcode_b4-1), l(opcode_b5-1), l(opcode_b6-1), l(opcode_b7-1)
-    dta l(opcode_b8-1), l(opcode_b9-1), l(opcode_ba-1), l(opcode_bb-1)
-    dta l(opcode_bc-1), l(opcode_bd-1), l(opcode_be-1), l(opcode_bf-1)
-    dta l(opcode_c0-1), l(opcode_c1-1), l(opcode_c2-1), l(opcode_c3-1)
-    dta l(opcode_c4-1), l(opcode_c5-1), l(opcode_c6-1), l(opcode_c7-1)
-    dta l(opcode_c8-1), l(opcode_c9-1), l(opcode_ca-1), l(opcode_cb-1)
-    dta l(opcode_cc-1), l(opcode_cd-1), l(opcode_ce-1), l(opcode_cf-1)
-    dta l(opcode_d0-1), l(opcode_d1-1), l(opcode_d2-1), l(opcode_d3-1)
-    dta l(opcode_d4-1), l(opcode_d5-1), l(opcode_d6-1), l(opcode_d7-1)
-    dta l(opcode_d8-1), l(opcode_d9-1), l(opcode_da-1), l(opcode_db-1)
-    dta l(opcode_dc-1), l(opcode_dd-1), l(opcode_de-1), l(opcode_df-1)
-    dta l(opcode_e0-1), l(opcode_e1-1), l(opcode_e2-1), l(opcode_e3-1)
-    dta l(opcode_e4-1), l(opcode_e5-1), l(opcode_e6-1), l(opcode_e7-1)
-    dta l(opcode_e8-1), l(opcode_e9-1), l(opcode_ea-1), l(opcode_eb-1)
-    dta l(opcode_ec-1), l(opcode_ed-1), l(opcode_ee-1), l(opcode_ef-1)
-    dta l(opcode_f0-1), l(opcode_f1-1), l(opcode_f2-1), l(opcode_f3-1)
-    dta l(opcode_f4-1), l(opcode_f5-1), l(opcode_f6-1), l(opcode_f7-1)
-    dta l(opcode_f8-1), l(opcode_f9-1), l(opcode_fa-1), l(opcode_fb-1)
-    dta l(opcode_fc-1), l(opcode_fd-1), l(opcode_fe-1), l(opcode_ff-1)
-
-jump_table_high:
-    dta h(opcode_00-1), h(opcode_01-1), h(opcode_02-1), h(opcode_03-1)
-    dta h(opcode_04-1), h(opcode_05-1), h(opcode_06-1), h(opcode_07-1)
-    dta h(opcode_08-1), h(opcode_09-1), h(opcode_0a-1), h(opcode_0b-1)
-    dta h(opcode_0c-1), h(opcode_0d-1), h(opcode_0e-1), h(opcode_0f-1)
-    dta h(opcode_10-1), h(opcode_11-1), h(opcode_12-1), h(opcode_13-1)
-    dta h(opcode_14-1), h(opcode_15-1), h(opcode_16-1), h(opcode_17-1)
-    dta h(opcode_18-1), h(opcode_19-1), h(opcode_1a-1), h(opcode_1b-1)
-    dta h(opcode_1c-1), h(opcode_1d-1), h(opcode_1e-1), h(opcode_1f-1)
-    dta h(opcode_20-1), h(opcode_21-1), h(opcode_22-1), h(opcode_23-1)
-    dta h(opcode_24-1), h(opcode_25-1), h(opcode_26-1), h(opcode_27-1)
-    dta h(opcode_28-1), h(opcode_29-1), h(opcode_2a-1), h(opcode_2b-1)
-    dta h(opcode_2c-1), h(opcode_2d-1), h(opcode_2e-1), h(opcode_2f-1)
-    dta h(opcode_30-1), h(opcode_31-1), h(opcode_32-1), h(opcode_33-1)
-    dta h(opcode_34-1), h(opcode_35-1), h(opcode_36-1), h(opcode_37-1)
-    dta h(opcode_38-1), h(opcode_39-1), h(opcode_3a-1), h(opcode_3b-1)
-    dta h(opcode_3c-1), h(opcode_3d-1), h(opcode_3e-1), h(opcode_3f-1)
-    dta h(opcode_40-1), h(opcode_41-1), h(opcode_42-1), h(opcode_43-1)
-    dta h(opcode_44-1), h(opcode_45-1), h(opcode_46-1), h(opcode_47-1)
-    dta h(opcode_48-1), h(opcode_49-1), h(opcode_4a-1), h(opcode_4b-1)
-    dta h(opcode_4c-1), h(opcode_4d-1), h(opcode_4e-1), h(opcode_4f-1)
-    dta h(opcode_50-1), h(opcode_51-1), h(opcode_52-1), h(opcode_53-1)
-    dta h(opcode_54-1), h(opcode_55-1), h(opcode_56-1), h(opcode_57-1)
-    dta h(opcode_58-1), h(opcode_59-1), h(opcode_5a-1), h(opcode_5b-1)
-    dta h(opcode_5c-1), h(opcode_5d-1), h(opcode_5e-1), h(opcode_5f-1)
-    dta h(opcode_60-1), h(opcode_61-1), h(opcode_62-1), h(opcode_63-1)
-    dta h(opcode_64-1), h(opcode_65-1), h(opcode_66-1), h(opcode_67-1)
-    dta h(opcode_68-1), h(opcode_69-1), h(opcode_6a-1), h(opcode_6b-1)
-    dta h(opcode_6c-1), h(opcode_6d-1), h(opcode_6e-1), h(opcode_6f-1)
-    dta h(opcode_70-1), h(opcode_71-1), h(opcode_72-1), h(opcode_73-1)
-    dta h(opcode_74-1), h(opcode_75-1), h(opcode_76-1), h(opcode_77-1)
-    dta h(opcode_78-1), h(opcode_79-1), h(opcode_7a-1), h(opcode_7b-1)
-    dta h(opcode_7c-1), h(opcode_7d-1), h(opcode_7e-1), h(opcode_7f-1)
-    dta h(opcode_80-1), h(opcode_81-1), h(opcode_82-1), h(opcode_83-1)
-    dta h(opcode_84-1), h(opcode_85-1), h(opcode_86-1), h(opcode_87-1)
-    dta h(opcode_88-1), h(opcode_89-1), h(opcode_8a-1), h(opcode_8b-1)
-    dta h(opcode_8c-1), h(opcode_8d-1), h(opcode_8e-1), h(opcode_8f-1)
-    dta h(opcode_90-1), h(opcode_91-1), h(opcode_92-1), h(opcode_93-1)
-    dta h(opcode_94-1), h(opcode_95-1), h(opcode_96-1), h(opcode_97-1)
-    dta h(opcode_98-1), h(opcode_99-1), h(opcode_9a-1), h(opcode_9b-1)
-    dta h(opcode_9c-1), h(opcode_9d-1), h(opcode_9e-1), h(opcode_9f-1)
-    dta h(opcode_a0-1), h(opcode_a1-1), h(opcode_a2-1), h(opcode_a3-1)
-    dta h(opcode_a4-1), h(opcode_a5-1), h(opcode_a6-1), h(opcode_a7-1)
-    dta h(opcode_a8-1), h(opcode_a9-1), h(opcode_aa-1), h(opcode_ab-1)
-    dta h(opcode_ac-1), h(opcode_ad-1), h(opcode_ae-1), h(opcode_af-1)
-    dta h(opcode_b0-1), h(opcode_b1-1), h(opcode_b2-1), h(opcode_b3-1)
-    dta h(opcode_b4-1), h(opcode_b5-1), h(opcode_b6-1), h(opcode_b7-1)
-    dta h(opcode_b8-1), h(opcode_b9-1), h(opcode_ba-1), h(opcode_bb-1)
-    dta h(opcode_bc-1), h(opcode_bd-1), h(opcode_be-1), h(opcode_bf-1)
-    dta h(opcode_c0-1), h(opcode_c1-1), h(opcode_c2-1), h(opcode_c3-1)
-    dta h(opcode_c4-1), h(opcode_c5-1), h(opcode_c6-1), h(opcode_c7-1)
-    dta h(opcode_c8-1), h(opcode_c9-1), h(opcode_ca-1), h(opcode_cb-1)
-    dta h(opcode_cc-1), h(opcode_cd-1), h(opcode_ce-1), h(opcode_cf-1)
-    dta h(opcode_d0-1), h(opcode_d1-1), h(opcode_d2-1), h(opcode_d3-1)
-    dta h(opcode_d4-1), h(opcode_d5-1), h(opcode_d6-1), h(opcode_d7-1)
-    dta h(opcode_d8-1), h(opcode_d9-1), h(opcode_da-1), h(opcode_db-1)
-    dta h(opcode_dc-1), h(opcode_dd-1), h(opcode_de-1), h(opcode_df-1)
-    dta h(opcode_e0-1), h(opcode_e1-1), h(opcode_e2-1), h(opcode_e3-1)
-    dta h(opcode_e4-1), h(opcode_e5-1), h(opcode_e6-1), h(opcode_e7-1)
-    dta h(opcode_e8-1), h(opcode_e9-1), h(opcode_ea-1), h(opcode_eb-1)
-    dta h(opcode_ec-1), h(opcode_ed-1), h(opcode_ee-1), h(opcode_ef-1)
-    dta h(opcode_f0-1), h(opcode_f1-1), h(opcode_f2-1), h(opcode_f3-1)
-    dta h(opcode_f4-1), h(opcode_f5-1), h(opcode_f6-1), h(opcode_f7-1)
-    dta h(opcode_f8-1), h(opcode_f9-1), h(opcode_fa-1), h(opcode_fb-1)
-    dta h(opcode_fc-1), h(opcode_fd-1), h(opcode_fe-1), h(opcode_ff-1)
-
-.else               ; STACK_BASED_DISPATCHER
-
     .align $100
 tab1
     .word opcode_00, opcode_01, opcode_02, opcode_03
@@ -2874,8 +2762,6 @@ tab2
     .word opcode_f4, opcode_f5, opcode_f6, opcode_f7
     .word opcode_f8, opcode_f9, opcode_fa, opcode_fb
     .word opcode_fc, opcode_fd, opcode_fe, opcode_ff
-
-.endif
 
 ; --------------------------------------------------------------------------
 
