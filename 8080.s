@@ -1,6 +1,6 @@
 
 ; Intel 8080 emulator for the Atari 130XE
-; Copyright © 2023 by Ivo van Poorten
+; Copyright © 2023,2024 by Ivo van Poorten
 ;
 ; This file is licensed under the terms of the 2-clause BSD license. Please
 ; see the LICENSE file in the root project directory for the full text.
@@ -2515,9 +2515,9 @@ CPM65BIOS:
 .endif
 
 banner:
-    dta 'Intel 8080 Emulator for the 130XE'
+    dta 'Intel 8080 Emulator for the Atari 130XE'
     dta_EOL
-    dta 'Copyright (C) 2023 by Ivo van Poorten'
+    dta 'Copyright 2023,2024 by Ivo van Poorten'
     dta_EOL
     dta_EOL
 banner_len = *-banner
