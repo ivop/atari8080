@@ -49,7 +49,7 @@ All four tests with the 6502 core are succesful!
 ![cputest.png](images/cputest.png) ![8080exm.png](images/8080exm.png)  
 
 
-The 8080 prototype core in C runs all validation sets correctly. Note that the BIOS handling might not have all the bugfixes the 6502 version got.  
+The 8080 prototype core in C runs all validation sets correctly. Note that the prototype's BIOS handling might not have all the bugfixes the 6502 version got.  
 
 Output:
 
