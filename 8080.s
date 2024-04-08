@@ -1822,6 +1822,7 @@ opcode_fc:
 opcode_cd:  ; CALL
 CALL:
     get_byte23
+_rst_call:
     PUSH PCH,PCL
     lda byte2
     sta PCL
@@ -1838,56 +1839,56 @@ opcode_c7:  ; RST0
     lda #0
     sta byte3
     sta byte2
-    jmp CALL
+    jmp _rst_call
 
 opcode_cf:  ; etc...
     lda #0
     sta byte3
     lda #$08
     sta byte2
-    jmp CALL
+    jmp _rst_call
 
 opcode_d7:
     lda #0
     sta byte3
     lda #$10
     sta byte2
-    jmp CALL
+    jmp _rst_call
 
 opcode_df:
     lda #0
     sta byte3
     lda #$18
     sta byte2
-    jmp CALL
+    jmp _rst_call
 
 opcode_e7:
     lda #0
     sta byte3
     lda #$20
     sta byte2
-    jmp CALL
+    jmp _rst_call
 
 opcode_ef:
     lda #0
     sta byte3
     lda #$28
     sta byte2
-    jmp CALL
+    jmp _rst_call
 
 opcode_f7:
     lda #0
     sta byte3
     lda #$30
     sta byte2
-    jmp CALL
+    jmp _rst_call
 
 opcode_ff:
     lda #0
     sta byte3
     lda #$38
     sta byte2
-    jmp CALL
+    jmp _rst_call
 
     ; ######################### IMMEDIATE #########################
     ; func byte2
