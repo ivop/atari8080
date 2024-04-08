@@ -31,14 +31,12 @@ BOOTF  = (BIOS+( 0*3))
 WBOOTF = (BIOS+( 1*3))
 DPBASE = (BIOS+(17*3))
 
-.ifdef CPM65
 ; OS ROM off, BASIC off
 NOBANK = $fe
 BANK0 = $e2 | $00 | $00
 BANK1 = $e2 | $00 | $04
 BANK2 = $e2 | $08 | $00
 BANK3 = $e2 | $08 | $04
-.endif
 
 ; --------------------------------------------------------------------------
 
@@ -2022,14 +2020,19 @@ opcode_d9:
 opcode_dd:
 opcode_ed:
 opcode_fd:
-.ifdef CPM65
-; print message through BIOS CONOUT
-.endif
+    ldx #0
+print_undefined:
+    lda undefined,x
+    ldy #CPM65_BIOS_CONOUT
+    stx t8
+    jsr CPM65BIOS
+    ldx t8
+    inx
+    cpx #undefined_len
+    bne print_undefined
     rts
 
 ; --------------------------------------------------------------------------
-
-.ifdef CPM65
 
 CPM65_BIOS_CONST    = 0
 CPM65_BIOS_CONIN    = 1
@@ -2504,15 +2507,11 @@ print_halted:
 CPM65BIOS:
     jmp $0000
 
-.endif
-
 ; --------------------------------------------------------------------------
 
-.ifdef CPM65
     .macro dta_EOL
         dta 13,10
     .endm
-.endif
 
 banner:
     dta 'Intel 8080 Emulator for the Atari 130XE'
@@ -2631,12 +2630,8 @@ msb_to_adjusted:
 
 ; Load CCP outside of virtual 8080 memory so it can be reloaded at will
 
-.ifdef CPM65
-
 CCP_LOAD_ADDRESS:
     ins 'cpm22/ccp.sys'
-
-.endif
 
 ; --------------------------------------------------------------------------
 
