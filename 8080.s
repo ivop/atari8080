@@ -123,26 +123,7 @@ ALL_FLAGS = (SF_FLAG|ZF_FLAG|AF_FLAG|PF_FLAG|ON_FLAG|CF_FLAG)
 .else
 
 ; We just assume we are on a 130XE for now. atari800 -xe 8080.xex
-
-    org $8000
-
-set_bank0:
-    lda #BANK0
-    sta_banksel
-    rts
-
-    ini set_bank0
-
-; setup low mem
-
-    org MEMWINDOW           ; 8080 memory at 00000h, bank 0
-
-    .byte 0x76          ; HALT if WBOOT is called
-    .byte 0
-    .byte 0
-    .word 0
-    .byte 0xc3          ; JMP
-    .word BDOSE
+; Checks are done in OVL loader.
 
 ; Load BDOS and BIOS directly to extended memory banks.
 
