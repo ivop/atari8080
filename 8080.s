@@ -120,6 +120,30 @@ ALL_FLAGS = (SF_FLAG|ZF_FLAG|AF_FLAG|PF_FLAG|ON_FLAG|CF_FLAG)
 
 .ifdef MASTER 128
 
+; We assume there is banked memory. Checks are done in OVL loader
+
+    org $3000
+
+bdos_lowram:
+    ins 'cpm22/bdos.sys'
+    ins 'cpm22/bios.sys'
+
+init_bdos_and_bios:
+    lda #BANK3
+    sta_banksel
+
+    ldx #0
+@:
+    .rept 20
+        lda bdos_lowram+#*256,x
+        sta MEMWINDOW+(BDOS&$3fff)+#*256,x
+    .endr
+    inx
+    bne @-
+
+    rts
+
+    ini init_bdos_and_bios
 .else
 
 ; We just assume we are on a 130XE for now. atari800 -xe 8080.xex
@@ -252,8 +276,12 @@ run_emulator:
         bne no_inc_pch
             inc PCH         ; each page crossing it's three instructions
             inc PCHa        ; longer
-;            bit PCHa
+.ifdef MASTER128
+            bit PCHa
+            bvc no_adjust
+.else
             bpl no_adjust   ; except for when we are at the end of the bank
+.endif
                 ldx PCH
                 lda msb_to_bank,x
                 sta curbank
@@ -2462,6 +2490,18 @@ main:
     stx CPM65BIOS+2
 
 .ifdef MASTER128
+    lda $f4
+    sta restore_banksel
+    lda #19                 ; VDU 19,0,4,0,0,0
+    jsr $ffee
+    lda #0
+    jsr $ffee
+    lda #4
+    jsr $ffee
+    .rept 3
+    lda #0
+    jsr $ffee
+    .endr
 .else
     lda #$a0                ; set green background
     sta $02c6
@@ -2504,13 +2544,23 @@ print_halted:
     bne print_halted
 
 .ifdef MASTER128
+    lda #19                 ; VDU 19,0,0,0,0,0
+    jsr $ffee
+    .rept 5
+    lda #0
+    jsr $ffee
+    .endr
 .else
     lda #0                  ; restore black background
     sta $02c6
     sta $02c8
 .endif
 
+.ifdef MASTER128
+    lda restore_banksel: #$00
+.else
     lda #NOBANK
+.endif
     sta_banksel
     rts                     ; back to CP/M-65
 
@@ -2631,10 +2681,10 @@ msb_to_bank:
 :64 dta BANK3
 
 msb_to_adjusted:
-:64 dta $40+#
-:64 dta $40+#
-:64 dta $40+#
-:64 dta $40+#
+:64 dta MEMWINDOW/256+#
+:64 dta MEMWINDOW/256+#
+:64 dta MEMWINDOW/256+#
+:64 dta MEMWINDOW/256+#
 
 ; include instruction_length and zsp_table tables
 
