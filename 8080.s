@@ -2278,6 +2278,8 @@ bios_0d:
     ldy #CPM65_BIOS_SETSEC
     jsr CPM65BIOS
 
+    ; set DMA to secbuf
+
     lda #<secbuf
     ldx #>secbuf
     ldy #CPM65_BIOS_SETDMA
@@ -2332,8 +2334,69 @@ no_next_bank1:
     rts
 
 bios_0e:
-    jmp *
-    rts:
+    jsr calculate_abs_sector_number
+
+    ; set CP/M-65 sector number
+
+    lda #<abs_sector_number
+    ldx #>abs_sector_number
+    ldy #CPM65_BIOS_SETSEC
+    jsr CPM65BIOS
+
+    ; set DMA to secbuf
+
+    lda #<secbuf
+    ldx #>secbuf
+    ldy #CPM65_BIOS_SETDMA
+    jsr CPM65BIOS
+
+    ; copy from DMA address
+
+    lda dma_address
+    sta tmp16
+    ldx dma_address+1
+    lda msb_to_adjusted,x
+    sta tmp16+1
+    lda msb_to_bank,x
+    sta_banksel
+
+    ldy #0
+    ldx #0
+copy_sec2:
+    lda (tmp16),y
+    sta secbuf,x
+    inc tmp16
+    bne no_hb2
+    inc tmp16+1
+    bit tmp16+1
+    bvc no_next_bank2
+
+    stx t8
+    ldx dma_address+1
+    inx                 ; next page
+    lda msb_to_adjusted,x
+    sta tmp16+1
+    lda msb_to_bank,x
+    sta_banksel
+    ldx t8
+
+no_hb2:
+no_next_bank2:
+    inx
+    bpl copy_sec2
+
+    ; write sector
+
+    ldy #CPM65_BIOS_WRITE
+    jsr CPM65BIOS
+
+    ; restore emulator state
+
+    lda curbank
+    sta_banksel
+    ldy #0
+    sty regA
+    rts
 
 .else
 
