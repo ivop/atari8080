@@ -1,12 +1,14 @@
 
 ; Intel 8080 emulator for the Atari 130XE
 ; Copyright © 2023,2024 by Ivo van Poorten
-;
+; BBC Master 128/512 port, Copyright © 2024 by Ivo van Poorten
+
 ; This file is licensed under the terms of the 2-clause BSD license. Please
 ; see the LICENSE file in the root project directory for the full text.
 ;
 ; mads assembler format
 
+; Atari PORTB/$d301
 ; bit 0 ROM, 0 = off, 1 = on
 ; bit 1 BASUC, 0 = on, 1 = off
 ; bits 2 and 3 select bank
@@ -15,10 +17,6 @@
 ; bit 7 selftest, 0 = on, 1 = off
 
 ; set to $fe at boot (basic enabled), $ff basic disabled
-
-; Needed for standalone test
-
-PORTB = $d301
 
 ; addresses inside virtual 8080 machine
 CCP   = $e400
@@ -31,18 +29,44 @@ BOOTF  = (BIOS+( 0*3))
 WBOOTF = (BIOS+( 1*3))
 DPBASE = (BIOS+(17*3))
 
+.ifdef MASTER128
+; BBC Master 128/512
+    NOBANK = $0c
+    BANK0  = $04
+    BANK1  = $05
+    BANK2  = $06
+    BANK3  = $07
+    .macro sta_banksel
+        sta $f4
+        sta $fe30
+    .endm
+    MEMWINDOW     = $8000
+    MEMWINDOW_END = $C000
+.else
+; Atari 130XE
+    PORTB = $d301
 ; OS ROM off, BASIC off
-NOBANK = $fe
-BANK0 = $e2 | $00 | $00
-BANK1 = $e2 | $00 | $04
-BANK2 = $e2 | $08 | $00
-BANK3 = $e2 | $08 | $04
+    NOBANK = $fe
+    BANK0 = $e2 | $00 | $00
+    BANK1 = $e2 | $00 | $04
+    BANK2 = $e2 | $08 | $00
+    BANK3 = $e2 | $08 | $04
+    .macro sta_banksel
+        sta PORTB
+    .endm
+    MEMWINDOW     = $4000
+    MEMWINDOW_END = $8000
+.endif
 
 ; --------------------------------------------------------------------------
 
 ; Zero Page
 
-ZP = $e0
+.ifdef MASTER128
+    ZP = $70
+.else
+    ZP = $e0
+.endif
 
 regA = ZP
 regF = ZP+1
@@ -94,20 +118,24 @@ ALL_FLAGS = (SF_FLAG|ZF_FLAG|AF_FLAG|PF_FLAG|ON_FLAG|CF_FLAG)
 
 ; --------------------------------------------------------------------------
 
+.ifdef MASTER 128
+
+.else
+
 ; We just assume we are on a 130XE for now. atari800 -xe 8080.xex
 
     org $8000
 
 set_bank0:
     lda #BANK0
-    sta PORTB
+    sta_banksel
     rts
 
     ini set_bank0
 
 ; setup low mem
 
-    org $4000           ; 8080 memory at 00000h, bank 0
+    org MEMWINDOW           ; 8080 memory at 00000h, bank 0
 
     .byte 0x76          ; HALT if WBOOT is called
     .byte 0
@@ -116,26 +144,25 @@ set_bank0:
     .byte 0xc3          ; JMP
     .word BDOSE
 
-; --------------------------------------------------------------------------
-
 ; Load BDOS and BIOS directly to extended memory banks.
 
-    org $8000
+    org MEMWINDOW_END
 
 set_bank3:
     lda #BANK3
-    sta PORTB
+    sta_banksel
     rts
 
     ini set_bank3
 
-    org $4000+(BDOS&$3fff)  ; in bank 3
+    org MEMWINDOW+(BDOS&$3fff)  ; in bank 3
 
     ins 'cpm22/bdos.sys'
 
-    org $4000+(BIOS&$3fff)  ; in bank 3
+    org MEMWINDOW+(BIOS&$3fff)  ; in bank 3
 
     ins 'cpm22/bios.sys'
+.endif
 
 ; --------------------------------------------------------------------------
 
@@ -164,11 +191,11 @@ set_bank3:
         lda msb_to_adjusted,x
         sta :HIGH+2
         lda msb_to_bank,x
-        sta PORTB
+        sta_banksel
         lda :LOC
         sta (:LOW),y
         lda curbank
-        sta PORTB
+        sta_banksel
     .endm
 
     ; Same, but does not restore curbank at the end. Use with caution!
@@ -178,7 +205,7 @@ set_bank3:
         lda msb_to_adjusted,x
         sta :HIGH+2
         lda msb_to_bank,x
-        sta PORTB
+        sta_banksel
         lda :LOC
         sta (:LOW),y
     .endm
@@ -190,11 +217,11 @@ set_bank3:
         lda msb_to_adjusted,x
         sta :HIGH+2
         lda msb_to_bank,x
-        sta PORTB
+        sta_banksel
         lda (:LOW),y            ; these are reversed!
         sta :LOC                ;
         lda curbank
-        sta PORTB
+        sta_banksel
     .endm
 
     ; Same, but does not restore curbank at the end. Use with caution!
@@ -204,7 +231,7 @@ set_bank3:
         lda msb_to_adjusted,x
         sta :HIGH+2
         lda msb_to_bank,x
-        sta PORTB
+        sta_banksel
         lda (:LOW),y
         sta :LOC
     .endm
@@ -221,11 +248,16 @@ set_bank3:
 ; BIT: The N and V flags are set to match bits 7 and 6 respectively in the
 ; value stored at the tested address.
 
+.ifdef MASTER128
+    org $3000
+.else
+
 ; Reserve 128 bytes after the banking window to allow overflow when
 ; reading a sector. The number of bytes overflowed need to be copied
 ; to the beginning of the next bank.
 
     org $8080
+.endif
 
 ; Enter with Y=0!
 
@@ -244,7 +276,7 @@ run_emulator:
                 ldx PCH
                 lda msb_to_bank,x
                 sta curbank
-                sta PORTB
+                sta_banksel
                 lda msb_to_adjusted,x       ; isn't this always lda #$40 ?
                 sta PCHa
 no_adjust:
@@ -415,7 +447,7 @@ opcode_34: ; INR M
     txa             ; still in X
     sta (regL),y    ; mem_read has setup the adjusted register and bank
     lda curbank
-    sta PORTB
+    sta_banksel
     jmp run_emulator
 
 opcode_3c:
@@ -466,7 +498,7 @@ opcode_35:  ; DCR M
     txa             ; still in X
     sta (regL),y    ; mem_read has setup the adjusted register and bank
     lda curbank
-    sta PORTB
+    sta_banksel
     jmp run_emulator
 
 opcode_3d:
@@ -1670,7 +1702,7 @@ opcode_c9: ; RET
     sta PCHa
     lda msb_to_bank,x
     sta curbank
-    sta PORTB
+    sta_banksel
     jmp run_emulator
 
     ; ######################### JMP #########################
@@ -1750,7 +1782,7 @@ _JMP:
     sta PCHa
     lda msb_to_bank,x
     sta curbank
-    sta PORTB
+    sta_banksel
     jmp run_emulator
 
     ; ######################### CALL/RST #########################
@@ -1832,7 +1864,7 @@ _rst_call:
     sta PCHa
     lda msb_to_bank,x
     sta curbank
-    sta PORTB
+    sta_banksel
     jmp run_emulator
 
 opcode_c7:  ; RST0
@@ -1980,7 +2012,7 @@ opcode_e9:  ; PCHL ---- PC.hi <- H;PC.lo <- L
     sta PCHa
     lda msb_to_bank,x
     sta curbank
-    sta PORTB
+    sta_banksel
     jmp run_emulator
 
 opcode_f9:  ; SPHL ---- SP <- HL
@@ -2077,19 +2109,19 @@ print_cpmvers:
 ; set CP/M jump vectors in low memory
 
     lda #BANK0
-    sta PORTB
+    sta_banksel
 
     lda #$c3        ; 8080 JMP instruction
-    sta $4000
-    sta $4005
+    sta MEMWINDOW
+    sta MEMWINDOW+5
     lda #<WBOOTF
-    sta $4001
+    sta MEMWINDOW+1
     lda #>WBOOTF
-    sta $4002
+    sta MEMWINDOW+2
     lda #<BDOSE
-    sta $4006
+    sta MEMWINDOW+6
     lda #>BDOSE
-    sta $4007
+    sta MEMWINDOW+7
 
 ; fallthrough
 
@@ -2098,26 +2130,14 @@ bios_01:    ; WBOOT
 ; copy CCP to virtual 8080 memory
 
     lda #BANK3
-    sta PORTB
+    sta_banksel
 
     ldx #0
 copy_ccp:
-    lda CCP_LOAD_ADDRESS+(0*256),x
-    sta CCP-$8000+(0*256),x
-    lda CCP_LOAD_ADDRESS+(1*256),x
-    sta CCP-$8000+(1*256),x
-    lda CCP_LOAD_ADDRESS+(2*256),x
-    sta CCP-$8000+(2*256),x
-    lda CCP_LOAD_ADDRESS+(3*256),x
-    sta CCP-$8000+(3*256),x
-    lda CCP_LOAD_ADDRESS+(4*256),x
-    sta CCP-$8000+(4*256),x
-    lda CCP_LOAD_ADDRESS+(5*256),x
-    sta CCP-$8000+(5*256),x
-    lda CCP_LOAD_ADDRESS+(6*256),x
-    sta CCP-$8000+(6*256),x
-    lda CCP_LOAD_ADDRESS+(7*256),x
-    sta CCP-$8000+(7*256),x
+    .rept 8
+    lda CCP_LOAD_ADDRESS+(#*256),x
+    sta MEMWINDOW+[CCP&$3fff]+(#*256),x
+    .endr
     inx
     bne copy_ccp
 
@@ -2139,7 +2159,7 @@ clear_zp:
     sta PCHa
     lda msb_to_bank,x
     sta curbank
-    sta PORTB
+    sta_banksel
 
     lda drive_number
     sta regC
@@ -2231,6 +2251,8 @@ bios_0c:    ; SETDMA
     sta regH
     rts
 
+; XXX Master 128, overflow past $c000 is not possible!! FIX
+
 bios_0d:    ; READ
     jsr calculate_abs_sector_number
 
@@ -2249,7 +2271,7 @@ bios_0d:    ; READ
     lda msb_to_adjusted,x
     sta tmp16+1
     lda msb_to_bank,x
-    sta PORTB
+    sta_banksel
 
     lda tmp16
     ldx tmp16+1
@@ -2276,7 +2298,7 @@ bios_0d:    ; READ
     ldx dma_address+1
     inx                     ; next page should be next bank
     lda msb_to_bank,x
-    sta PORTB
+    sta_banksel
 
     ldx tmp16
     dex                     ; minus one is the last byte of overflown bytes
@@ -2293,7 +2315,7 @@ no_overflow:
     ; restore emulator state
 
     lda curbank
-    sta PORTB
+    sta_banksel
     ldy #0
     sty regA
     rts
@@ -2316,7 +2338,7 @@ bios_0e:    ; WRITE
     lda msb_to_adjusted,x
     sta tmp16+1
     lda msb_to_bank,x
-    sta PORTB
+    sta_banksel
     sta t8                  ; save for later in case of overflow
 
     lda tmp16
@@ -2339,7 +2361,7 @@ bios_0e:    ; WRITE
     ldx dma_address+1
     inx                     ; next page should be next bank
     lda msb_to_bank,x
-    sta PORTB
+    sta_banksel
 
     ldx tmp16
     dex                     ; minus one is the last byte of overflown bytes
@@ -2352,7 +2374,7 @@ copy_to_overflow_area
     bpl copy_to_overflow_area
 
     lda t8                  ; restore bank where DMA starts
-    sta PORTB
+    sta_banksel
 
 no_overflow2:
 
@@ -2364,7 +2386,7 @@ no_overflow2:
     ; restore emulator state
 
     lda curbank
-    sta PORTB
+    sta_banksel
     ldy #0
     sty regA
     rts
@@ -2458,9 +2480,12 @@ main:
     sta CPM65BIOS+1
     stx CPM65BIOS+2
 
+.ifdef MASTER128
+.else
     lda #$a0                ; set green background
     sta $02c6
     sta $02c8
+.endif
 
     ldx #0
 print_banner:
@@ -2481,7 +2506,7 @@ print_banner:
     sta PCHa
     lda msb_to_bank,x
     sta curbank
-    sta PORTB
+    sta_banksel
 
     ldy #0
     jsr run_emulator
@@ -2497,12 +2522,15 @@ print_halted:
     cpx #halted_len
     bne print_halted
 
+.ifdef MASTER128
+.else
     lda #0                  ; restore black background
     sta $02c6
     sta $02c8
+.endif
 
     lda #NOBANK
-    sta PORTB
+    sta_banksel
     rts                     ; back to CP/M-65
 
 CPM65BIOS:
@@ -2515,7 +2543,11 @@ CPM65BIOS:
     .endm
 
 banner:
+.ifdef MASTER128
+    dta 'Intel 8080 Emulator for the Master 128'
+.else
     dta 'Intel 8080 Emulator for the Atari 130XE'
+.endif
     dta_EOL
     dta 'Copyright 2023,2024 by Ivo van Poorten'
     dta_EOL
