@@ -2492,11 +2492,11 @@ main:
 .ifdef MASTER128
     lda $f4
     sta restore_banksel
-    lda #19                 ; VDU 19,0,4,0,0,0
+    lda #19                 ; VDU 19,1,2,0,0,0
     jsr $ffee
-    lda #0
+    lda #1
     jsr $ffee
-    lda #4
+    lda #2
     jsr $ffee
     .rept 3
     lda #0
@@ -2544,9 +2544,13 @@ print_halted:
     bne print_halted
 
 .ifdef MASTER128
-    lda #19                 ; VDU 19,0,0,0,0,0
+    lda #19                 ; VDU 19,1,7,0,0,0
     jsr $ffee
-    .rept 5
+    lda #1
+    jsr $ffee
+    lda #7
+    jsr $ffee
+    .rept 3
     lda #0
     jsr $ffee
     .endr
@@ -2575,7 +2579,7 @@ CPM65BIOS:
 
 banner:
 .ifdef MASTER128
-    dta 'Intel 8080 Emulator for the Master 128'
+    dta 'Intel 8080 Emulator for the BBC Master 128'
 .else
     dta 'Intel 8080 Emulator for the Atari 130XE'
 .endif
