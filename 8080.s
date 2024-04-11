@@ -126,7 +126,7 @@ ALL_FLAGS = (SF_FLAG|ZF_FLAG|AF_FLAG|PF_FLAG|ON_FLAG|CF_FLAG)
 
 bdos_lowram:
     ins 'cpm22/bdos.sys'
-    ins 'cpm22/bios.sys'
+    ins 'cpm22/bios-bbc.sys'
 
 init_bdos_and_bios:
     lda #BANK3
@@ -255,6 +255,10 @@ set_bank3:
 
 .ifdef MASTER128
     org $3000
+
+secbuf:     ; We cannot read directly into sideways RAM, buffer here
+
+    org $3080
 .else
 
 ; Reserve 128 bytes after the banking window to allow overflow when
@@ -2260,7 +2264,78 @@ bios_0c:    ; SETDMA
     sta regH
     rts
 
-; XXX Master 128, overflow past $c000 is not possible!! FIX
+.ifdef MASTER128
+
+; BBS Master 128, overflow past $c000 is not possible, so we use a buffer
+
+bios_0d:
+    jsr calculate_abs_sector_number
+
+    ; set CP/M-65 sector number
+
+    lda #<abs_sector_number
+    ldx #>abs_sector_number
+    ldy #CPM65_BIOS_SETSEC
+    jsr CPM65BIOS
+
+    lda #<secbuf
+    ldx #>secbuf
+    ldy #CPM65_BIOS_SETDMA
+    jsr CPM65BIOS
+
+    ; read sector
+
+    ldy #CPM65_BIOS_READ
+    jsr CPM65BIOS
+
+    ; copy to DMA address
+
+    lda dma_address
+    sta tmp16
+    ldx dma_address+1
+    lda msb_to_adjusted,x
+    sta tmp16+1
+    lda msb_to_bank,x
+    sta_banksel
+
+    ldy #0
+    ldx #0
+copy_sec1:
+    lda secbuf,x
+    sta (tmp16),y
+    inc tmp16
+    bne no_hb1
+    inc tmp16+1
+    bit tmp16+1
+    bvc no_next_bank1
+
+    stx t8
+    ldx dma_address+1
+    inx                 ; next page
+    lda msb_to_adjusted,x
+    sta tmp16+1
+    lda msb_to_bank,x
+    sta_banksel
+    ldx t8
+
+no_hb1:
+no_next_bank1:
+    inx
+    bpl copy_sec1
+
+    ; restore emulator state
+
+    lda curbank
+    sta_banksel
+    ldy #0
+    sty regA
+    rts
+
+bios_0e:
+    jmp *
+    rts:
+
+.else
 
 bios_0d:    ; READ
     jsr calculate_abs_sector_number
@@ -2399,10 +2474,24 @@ no_overflow2:
     ldy #0
     sty regA
     rts
+.endif
 
 calculate_abs_sector_number:
-    ; track number * 18
+    ; Atari --> track number * 18
+    ; BBC --> track number * 16
 
+.ifdef MASTER128
+
+    lda track_number
+    sta abs_sector_number
+    lda track_number+1
+    sta abs_sector_number+1
+    .rept 4
+    asl abs_sector_number
+    rol abs_sector_number+1
+    .endr
+
+.else
     ; *2 to tmp16 and abs_sector_number
 
     lda track_number
@@ -2431,6 +2520,8 @@ calculate_abs_sector_number:
     lda abs_sector_number+1
     adc tmp16+1
     sta abs_sector_number+1
+
+.endif
 
     ; add sector_number
 

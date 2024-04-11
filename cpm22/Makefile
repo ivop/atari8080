@@ -1,5 +1,5 @@
 
-all: bios.h bdos.h ccp.h
+all: bios.h bdos.h ccp.h bios-bbc.sys
 
 bios.h:	bios.sys
 	xxd -i bios.sys > bios.h
@@ -7,6 +7,11 @@ bios.h:	bios.sys
 bios.sys: bios.asm
 	asl -D origin=0fa00h -o bios.p bios.asm
 	p2bin -k -l '$$00' -r '$$fa00-$$ffff' bios.p bios.sys
+
+bios-bbc.sys: bios.asm
+	asl -D origin=0fa00h,MASTER128=1 -o bios-bbc.p bios.asm
+	p2bin -k -l '$$00' -r '$$fa00-$$ffff' bios-bbc.p bios-bbc.sys
+
 
 bdos.h:	bdos.sys
 	xxd -i bdos.sys > bdos.h

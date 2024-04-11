@@ -82,12 +82,25 @@ trans:
 ;block_size = 1024
 ;dirents = 64
 
+    ifdef MASTER128
+
+; bbc192
+number_of_tracks = 96
+reserved_tracks = 0
+sectors_per_track = 16
+block_size = 1024
+dirents = 64
+
+    else
+
 ; atarihd
 number_of_tracks = 455
 reserved_tracks = 1
 sectors_per_track = 18
 block_size = 2048
 dirents = 128
+
+    endif
 
     if block_size = 1024
 block_shift = 3
