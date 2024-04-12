@@ -37,7 +37,7 @@ DPBASE = (BIOS+(17*3))
     BANK2  = $06
     BANK3  = $07
     .macro sta_banksel
-        sta $f4
+;        sta $f4    ; not needed because we restore our bank after a syscall
         sta $fe30
     .endm
     MEMWINDOW     = $8000
@@ -2184,6 +2184,10 @@ bios_02:    ; CONST
     ldy #CPM65_BIOS_CONST
     jsr CPM65BIOS
     sta regA
+.ifdef MASTER128
+    lda curbank             ; restore bank after syscall
+    sta_banksel
+.endif
     ldy #0
     rts
 
@@ -2195,6 +2199,10 @@ bios_03:    ; CONIN
     lda #8                  ; BS
 no_bs:
     sta regA
+.ifdef MASTER128
+    lda curbank             ; restore bank after syscall
+    sta_banksel
+.endif
     ldy #0
     rts
 
@@ -2202,6 +2210,10 @@ bios_04:    ; CONOUT
     lda regC
     ldy #CPM65_BIOS_CONOUT
     jsr CPM65BIOS
+.ifdef MASTER128
+    lda curbank             ; restore bank after syscall
+    sta_banksel
+.endif
     ldy #0
     rts
 
