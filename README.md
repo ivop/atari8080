@@ -1,8 +1,9 @@
 ### Intel 8080 Emulator
 
-This repository contains an Intel 8080 emulator for the Atari 130XE written in 6502 assembly.
+This repository contains an Intel 8080 emulator for the Atari 130XE
+and the BBC Master written in 6502 assembly.
 
-![atari40x24.png](images/atari40x24.png) ![atari80x24.png](images/atari80x24.png)
+![atari40x24.png](images/atari40x24.png) ![atari80x24.png](images/atari80x24.png) <img src="images/bbcmaster.png" width="336" />
 
 The Makefile builds an overlay that is meant to be run on top of CP/M-65.
 It translates all 8080 BIOS calls to their CP/M-65 equivalents. BDOS and CCP
