@@ -3,8 +3,9 @@ CPMFILES = \
 	cpm2-plm/STAT.COM \
 	cpm2-plm/DUMP.COM \
 	cpm2-plm/PIP.COM \
-	tests/*.COM \
+	tests/* \
 	misc/* \
+	software/wordstar33/* \
 #	cpm2-plm/MAC.COM \
 #	cpm2-plm/LOAD.COM \
 #	tests/*.ASM \

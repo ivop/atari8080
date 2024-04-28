@@ -146,7 +146,8 @@ static uint8_t instruction, byte2, byte3;
 #define BIOS    0xfa00
 
 #define BDOS    0xec00
-#define BDOSE   (BDOS+6)
+#define BDOSJMP (BDOS+6)
+#define BDOSE   (BDOS+0x11)
 
 #define CPMB    0xe400          // base of cpm console processor
 
@@ -255,9 +256,12 @@ static void bios_entry(int function) {
         mem[0][0x0001] = WBOOTF & 0xff;
         mem[0][0x0002] = WBOOTF >> 8;
 
-        mem[0][0x0005] = 0xc3;   // JMP $EC06 BDOSE
-        mem[0][0x0006] = BDOSE & 0xff;
-        mem[0][0x0007] = BDOSE >> 8;
+        mem[0][0x0005] = 0xc3;   // JMP $EC06 BDOSJMP
+        mem[0][0x0006] = BDOSJMP & 0xff;
+        mem[0][0x0007] = BDOSJMP >> 8;
+
+        mem[3][(BDOS&0x3fff)+6] = 0xdb; // IN d8, trap BDOS
+        mem[3][(BDOS&0x3fff)+8] = 0xc9; // RET if BDOS function was intercepted
 
         [[fallthrough]];
 
@@ -402,6 +406,35 @@ static void bios_entry(int function) {
         biosprintf("BIOS: wrong entry!\n");
         exit(1);
         break;
+    }
+}
+
+// -------------------------------------------------------------------------
+
+static void bdos_entry(uint8_t dummy) {
+    switch(C) {
+    case 9: {   // C_WRITESTR
+            int addr = (D<<8) | E;
+            int t;
+            while ((t = mem[D>>6][addr&0x3fff]) != '$') {
+                putchar(t);
+                addr++;
+            }
+        }
+        break;
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+//        printf("BDOS(%d)\n",C);fflush(stdout);
+    default:
+        PCL = BDOSE & 0xff;
+        PCH = BDOSE >> 8;
+        PCHa = PCH & 0x3f;
+        curbank = 3;
+        return;
     }
 }
 
@@ -1054,6 +1087,7 @@ CALL:
             bios_entry(byte2);
             break;
         case 0xdb: // IN d8 ---- INput from device num to A
+            bdos_entry(byte2);
             break;
 
         // ######################### EI/DI #########################
