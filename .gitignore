@@ -3,6 +3,7 @@
 atari8080
 atari8080-debug
 disk.img
+disk2.img
 bootsectors.bin
 prototype/software
 prototype/tables/tablegen
