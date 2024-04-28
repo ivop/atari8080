@@ -239,7 +239,7 @@ static uint16_t dma_address;
 static uint16_t drive_number;
 static uint8_t track_number;
 static uint16_t sector_number;
-static FILE *dsk0;
+static FILE *dsk[2];
 
 static void bios_entry(int function) {
     int r;
@@ -299,7 +299,8 @@ static void bios_entry(int function) {
         A = getchar();
         if (A == 127) A = 8;
         if (A == 24) {      // ^X to exit emulator
-            fclose(dsk0);
+            fclose(dsk[0]);
+            fclose(dsk[1]);
             exit(0);
         }
         break;
@@ -328,10 +329,14 @@ static void bios_entry(int function) {
     case 9:         // seldsk
         H = 0;
         L = 0;
-        if (C == 0) {           // we have only one drive
+        if (C == 0) {
             drive_number = C;
             H = DPBASE >> 8;    // return dpbase in HL
             L = DPBASE & 0xff;
+        } else if (C == 1) {
+            drive_number = C;
+            H = (DPBASE+16) >> 8;    // return dpbase in HL
+            L = (DPBASE+16) & 0xff;
         }
         break;
 
@@ -353,16 +358,16 @@ static void bios_entry(int function) {
                     // hardcoded 18 sectors per track for atarihd format
         int abssec = track_number * 18 + sector_number;
         int adr = dma_address;
-        if (fseek(dsk0, abssec*128, SEEK_SET) == EINVAL) {
+        if (fseek(dsk[drive_number], abssec*128, SEEK_SET) == EINVAL) {
             A = 1;
             break;
         }
         if ((adr & 0x3fff) <= 0x3f80) {
             int bnk = adr>>(8+6);
-            int ret = fread(&mem[bnk][adr&0x3fff], 1, 128, dsk0);
+            int ret = fread(&mem[bnk][adr&0x3fff], 1, 128, dsk[drive_number]);
         } else {
             for (int i=0; i<128; i++) {
-                mem_write(adr&0xff, adr>>8, fgetc(dsk0));
+                mem_write(adr&0xff, adr>>8, fgetc(dsk[drive_number]));
                 adr++;
             }
         }
@@ -372,17 +377,17 @@ static void bios_entry(int function) {
     case 14: {      // write
         int abssec = track_number * 18 + sector_number;
         int adr = dma_address;
-        if (fseek(dsk0, abssec*128, SEEK_SET) == EINVAL) {
+        if (fseek(dsk[drive_number], abssec*128, SEEK_SET) == EINVAL) {
             biosprintf("FAILED\n");
             A = 1;
             break;
         }
         if ((adr & 0x3fff) <= 0x3f80) {
             int bnk = adr>>(8+6);
-            int ret = fwrite(&mem[bnk][adr&0x3fff], 1, 128, dsk0);
+            int ret = fwrite(&mem[bnk][adr&0x3fff], 1, 128, dsk[drive_number]);
         } else {
             for (int i=0; i<128; i++) {
-                if (fputc(mem_read(adr&0xff, adr>>8), dsk0) < 0) {
+                if (fputc(mem_read(adr&0xff, adr>>8), dsk[drive_number]) < 0) {
                     fprintf(stderr, "WRITE ERROR\n");
                     exit(0);
                 }
@@ -434,6 +439,11 @@ static void bdos_entry(uint8_t dummy) {
                 A = L = getchar();
             } else {
                 A = L = 0;
+            }
+            if (A == 24) {      // ^X to exit emulator
+                fclose(dsk[0]);
+                fclose(dsk[1]);
+                exit(0);
             }
             return;
         }
@@ -786,7 +796,8 @@ static void run_emulator(void) {
                 print_bdos_serial();
                 exit(1);
             }
-            break;       // HLT, not MOV M,M we don't halt :)
+            exit(0);
+            break;
 
         case 0x77: mem_write(L, H, A); break;
 
@@ -1157,15 +1168,17 @@ int main(int argc, char **argv) {
 
     memcpy(&mem[3][BIOS&0x3fff], bios_sys, bios_sys_len);
 
-    if (argc != 2) {
-        fprintf(stderr, "usage: atari8080 disk.img\n");
+    if (argc != 3) {
+        fprintf(stderr, "usage: atari8080 disk.img disk2.img\n");
         return 1;
     }
 
-    dsk0 = fopen(argv[1], "rb+");
-    if (!dsk0) {
-        fprintf(stderr, "unable to open %s\n", argv[1]);
-        return 1;
+    for (int i=0; i<2; i++) {
+        dsk[i] = fopen(argv[1+i], "rb+");
+        if (!dsk[i]) {
+            fprintf(stderr, "unable to open %s\n", argv[1+i]);
+            return 1;
+        }
     }
 
     struct termios new_termios;
