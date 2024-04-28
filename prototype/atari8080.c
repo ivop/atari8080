@@ -422,19 +422,33 @@ static void bdos_entry(uint8_t dummy) {
             }
         }
         break;
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-//        printf("BDOS(%d)\n",C);fflush(stdout);
+    case 1: // C_READ
+        A = L = getchar();
+        if (A == 127) A = 8;
+        //putchar('.');
+        putchar(A);
+        break;
+    case 6:     // C_RAWIO (this is what Zork 1 uses)
+        if (E==0xff) {
+            if (kbhit()) {
+                A = L = getchar();
+            } else {
+                A = L = 0;
+            }
+            return;
+        }
+        [[fallthrough]];
+    case 2: // C_WRITE
+        //putchar(',');
+        putchar(E);
+        fflush(stdout);
+        break;
     default:
         PCL = BDOSE & 0xff;
         PCH = BDOSE >> 8;
         PCHa = PCH & 0x3f;
         curbank = 3;
-        return;
+        break;
     }
 }
 
