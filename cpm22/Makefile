@@ -12,8 +12,8 @@ bios-bbc.sys: bios.asm
 	asl -D origin=0fa00h,MASTER128=1 -o bios-bbc.p bios.asm
 	p2bin -k -l '$$00' -r '$$fa00-$$ffff' bios-bbc.p bios-bbc.sys
 
-bios2.sys: bios2.asm
-	asl -D origin=0fa00h -o bios2.p bios2.asm
+bios2.sys: bios.asm
+	asl -D origin=0fa00h,SECOND_DRIVE=1 -o bios2.p bios.asm
 	p2bin -k -l '$$00' -r '$$fa00-$$ffff' bios2.p bios2.sys
 
 bdos.h:	bdos.sys

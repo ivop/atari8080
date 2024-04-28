@@ -65,6 +65,15 @@ dpbase:
     dw chk00
     dw all00
 
+    ifdef SECOND_DRIVE
+        dw trans
+        db 0, 0, 0, 0, 0, 0
+        dw dirbf
+        dw dpblk
+        dw chk01
+        dw all01
+    endif
+
 ; more disks here
 
 ; sector translate vector (not used)
@@ -174,3 +183,10 @@ chk00:
     ds checksum_buffer_size
 all00:
     ds allocation_vector_size
+
+    ifdef SECOND_DRIVE
+chk01:
+    ds checksum_buffer_size
+all01:
+    ds allocation_vector_size
+    endif
