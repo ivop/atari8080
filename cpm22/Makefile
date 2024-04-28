@@ -3,6 +3,7 @@ all: bios.h bdos.h ccp.h bios.sys bios-bbc.sys
 
 bios.h:	bios2.sys
 	xxd -i bios2.sys > bios.h
+	sed -i 's/bios2_sys/bios_sys/g' bios.h
 
 bios.sys: bios.asm
 	asl -D origin=0fa00h -o bios.p bios.asm
