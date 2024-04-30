@@ -237,7 +237,7 @@ static int kbhit();
 
 static uint16_t dma_address;
 static uint16_t drive_number;
-static uint8_t track_number;
+static uint16_t track_number;
 static uint16_t sector_number;
 static FILE *dsk[2];
 
