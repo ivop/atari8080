@@ -298,11 +298,13 @@ static void bios_entry(int function) {
     case 3:         // conin
         A = getchar();
         if (A == 127) A = 8;
+#ifdef CTRL_X_IS_EXIT
         if (A == 24) {      // ^X to exit emulator
             fclose(dsk[0]);
             fclose(dsk[1]);
             exit(0);
         }
+#endif
         break;
 
     case 4:         // conout
@@ -440,12 +442,14 @@ static void bdos_entry(uint8_t dummy) {
             } else {
                 A = L = 0;
             }
+#ifdef CTRL_X_IS_EXIT
             if (A == 24) {      // ^X to exit emulator
                 fclose(dsk[0]);
                 fclose(dsk[1]);
                 exit(0);
             }
             return;
+#endif
         }
         [[fallthrough]];
     case 2: // C_WRITE
@@ -791,6 +795,8 @@ static void run_emulator(void) {
 
         case 0x76:
             fprintf(stderr, "HALT PC: %04X\n", ((PCH<<8)|PCL)-1);
+            fclose(dsk[0]);
+            fclose(dsk[1]);
             if (PCH>=0xe4 && PCH<0xec) {
                 fprintf(stderr, "serial check on bdos fail --> overwritten\n");
                 print_bdos_serial();

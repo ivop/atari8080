@@ -5,7 +5,7 @@ CPMFILES = \
 	cpm2-plm/PIP.COM \
 	tests/* \
 	misc/* \
-	software/wordstar33/* \
+#	software/wordstar33/* \
 #	cpm2-plm/MAC.COM \
 #	cpm2-plm/LOAD.COM \
 #	tests/*.ASM \
@@ -30,7 +30,7 @@ disk.img: Makefile
 
 disk2.img: Makefile
 	dd if=/dev/zero of=disk2.img bs=128 count=8190
-	mkfs.cpm -f atarihd disk2.img
+#	mkfs.cpm -f atarihd disk2.img
 
 tables/tables.h: tables/tablegen tables/tablegen.c
 	$(MAKE) -C tables tables.h
