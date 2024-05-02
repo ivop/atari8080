@@ -5,6 +5,7 @@ CPMFILES = \
 	cpm2-plm/PIP.COM \
 	tests/* \
 	misc/* \
+	utils/*.COM \
 #	software/wordstar33/* \
 #	cpm2-plm/MAC.COM \
 #	cpm2-plm/LOAD.COM \

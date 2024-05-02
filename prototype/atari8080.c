@@ -794,7 +794,8 @@ static void run_emulator(void) {
         case 0x75: mem_write(L, H, L); break;
 
         case 0x76:
-            fprintf(stderr, "HALT PC: %04X\n", ((PCH<<8)|PCL)-1);
+            if (PCH != 0x01 && PCL != 0x00)
+                fprintf(stderr, "HALT PC: %04X\n", ((PCH<<8)|PCL)-1);
             fclose(dsk[0]);
             fclose(dsk[1]);
             if (PCH>=0xe4 && PCH<0xec) {
