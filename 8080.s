@@ -10,7 +10,7 @@
 
 ; Atari PORTB/$d301
 ; bit 0 ROM, 0 = off, 1 = on
-; bit 1 BASUC, 0 = on, 1 = off
+; bit 1 BASIC, 0 = on, 1 = off
 ; bits 2 and 3 select bank
 ; bits 4 and 5 enable bank switched in, bit 4 low is CPU, bit 5 low is ANTIC
 ; bit 6 unused
@@ -118,7 +118,7 @@ ALL_FLAGS = (SF_FLAG|ZF_FLAG|AF_FLAG|PF_FLAG|ON_FLAG|CF_FLAG)
 
 ; --------------------------------------------------------------------------
 
-.ifdef MASTER 128
+.ifdef MASTER128
 
 ; We assume there is banked memory. Checks are done in OVL loader
 
